@@ -17,6 +17,7 @@ hbsqlit3.hbc
 ../../hbexpect/lib/hbexpect.prg
 ../../datasourcedao_harbour/datasourcedao_class.prg
 ../customerdao_class.prg
+../utilsdao_class.prg
 customerdao_test.prg
 
 # Special parameters for LINUX/GTK
