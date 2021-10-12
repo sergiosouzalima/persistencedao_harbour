@@ -1,0 +1,26 @@
+#
+# $Id: customerdao_test.hbp
+# 
+# How to compile:
+# hbmk2 customerdao_test.hbp
+#
+
+-w2
+-gc3
+-ocustomerdao_test
+{linux}-ldl
+-lpthread
+
+
+hbsqlit3.hbc
+
+../../hbexpect/lib/hbexpect.prg
+../../datasourcedao_harbour/datasourcedao_class.prg
+../customerdao_class.prg
+customerdao_test.prg
+
+# Special parameters for LINUX/GTK
+{linux}-lm
+{linux}-static
+{linux}-d__LINUX__
+{linux}-d__GTK__
