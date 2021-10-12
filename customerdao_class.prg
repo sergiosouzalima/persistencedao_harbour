@@ -9,17 +9,7 @@
 
 #include "hbclass.ch"
 #require "hbsqlit3"
-
-#xcommand TRY      			=> BEGIN SEQUENCE WITH {|o| break(o)}
-#xcommand CATCH [<!oErr!>] 	=> RECOVER [USING <oErr>] <-oErr->
-#xcommand FINALLY 			=> ALWAYS
-#xcommand ENDTRY 			=> ENDSEQUENCE
-
-// in line IF & UNLESS COMMANDS
-#xcommand <Command1> [<Commandn>] IF <lCondition> => IF <lCondition> ; <Command1> [<Commandn>]; ENDIF ;
-
-#xcommand <Command1> [<Commandn>] UNLESS <lCondition> => IF !(<lCondition>) ; <Command1> [<Commandn>]; ENDIF ;
-
+#include "custom_commands.ch"
 
 #define SQL_CUSTOMER_CREATE_TABLE ;
     "CREATE TABLE IF NOT EXISTS CUSTOMER(" + ;
@@ -47,9 +37,11 @@ CREATE CLASS CustomerDao INHERIT DatasourceDao
         METHOD Destroy()
         METHOD CreateTable()
         METHOD GetMessage()
+
+    PROTECTED:
+        DATA pConnection    AS POINTER  INIT NIL
         
     HIDDEN: 
-        DATA pConnection    AS POINTER  INIT NIL
         DATA cMessage       AS STRING   INIT ""
         METHOD FormatErrorMsg( pDataBase, nSqlErrorCode, cSql )
         METHOD CheckIfErrors(lOk, nSqlErrorCode, oError) 
@@ -59,7 +51,7 @@ CREATE CLASS CustomerDao INHERIT DatasourceDao
 ENDCLASS
 
 METHOD New() CLASS CustomerDao
-    ::pConnection := DatasourceDao():New():getConnection()
+    ::pConnection := ::Super:New():getConnection()
 RETURN Self
 
 METHOD Destroy() CLASS CustomerDao
