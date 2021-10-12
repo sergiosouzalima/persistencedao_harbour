@@ -58,14 +58,8 @@ CREATE CLASS CustomerDao INHERIT DatasourceDao
     ERROR HANDLER OnError( xParam )
 ENDCLASS
 
-/*METHOD New(oDatasourceDao) CLASS CustomerDao
-    ::pConnection := oDatasourceDao:pConnection
-RETURN Self*/
-
 METHOD New() CLASS CustomerDao
-    LOCAL oDatasourceDao := NIL
-    oDatasourceDao := DatasourceDao():New()
-    ::pConnection := oDatasourceDao:getConnection()
+    ::pConnection := DatasourceDao():New():getConnection()
 RETURN Self
 
 METHOD Destroy() CLASS CustomerDao
