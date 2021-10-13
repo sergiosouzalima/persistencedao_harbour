@@ -66,7 +66,9 @@
     " DOCUMENT_NUMBER," +;
     " ZIP_CODE_NUMBER," +;
     " CITY_NAME," +; 
-    " CITY_STATE_INITIALS" +;
+    " CITY_STATE_INITIALS," +;
+    " CREATED_AT," +;
+    " UPDATED_AT" +;
     " FROM CUSTOMER" +;
     " WHERE ID = #ID;"
 
@@ -86,7 +88,7 @@ CREATE CLASS CustomerDao INHERIT DatasourceDao
         
     HIDDEN: 
         DATA cMessage       AS STRING   INIT ""
-        DATA pRecordSet     AS POINTER  INIT NIL
+        DATA ahRecordSet    AS ARRAY    INIT {}
 
     ERROR HANDLER OnError( xParam )
 ENDCLASS
@@ -132,12 +134,11 @@ METHOD FindById( nId ) CLASS CustomerDao
     LOCAL oUtils := UtilsDao():New()
     LOCAL lOk :=.F., cSql := SQL_CUSTOMER_FIND_BY_ID
     LOCAL hFindRecord := { => }
-
     hFindRecord["#ID"] := Alltrim(Str(nId))
     cSql := hb_StrReplace( cSql, hFindRecord )
     lOk := oUtils:FindBy( ::pConnection, cSql )
     ::cMessage := oUtils:GetMessage()
-    ::pRecordSet := oUtils:GetRecordSet()
+    ::ahRecordSet := oUtils:GetRecordSet()
     oUtils := UtilsDao():Destroy()
 RETURN lOk
 
@@ -145,7 +146,7 @@ METHOD GetMessage() CLASS CustomerDao
 RETURN ::cMessage
 
 METHOD GetRecordSet() CLASS CustomerDao
-RETURN ::pRecordSet
+RETURN ::ahRecordSet
 
 METHOD ONERROR( xParam ) CLASS CustomerDao
     LOCAL cCol := __GetMessage(), xResult
