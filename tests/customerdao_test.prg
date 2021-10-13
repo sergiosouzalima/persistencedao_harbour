@@ -41,23 +41,32 @@ FUNCTION Main()
 			enddescribe
 
 			describe "oCustomerDao:Insert( hRecord ) -> lOk"
-				hRecord := { ;
-						"#CUSTOMER_NAME"                =>  "PRIMEIRO CLIENTE", ;
-						"#BIRTH_DATE"                   =>  "22/01/1980", ;
-						"#GENDER_ID"                    =>  "2", ;
-						"#ADDRESS_DESCRIPTION"          =>  "5th AV, 505", ;
-						"#COUNTRY_CODE_PHONE_NUMBER"    =>  "55", ;
-						"#AREA_PHONE_NUMBER"            =>  "11", ;
-						"#PHONE_NUMBER"                 =>  "555-55555", ;
-						"#CUSTOMER_EMAIL"               =>  "nome-cliente@mail.com", ;
-						"#DOCUMENT_NUMBER"              =>  "99876999-99", ;
-						"#ZIP_CODE_NUMBER"              =>  "04041-999", ;
-						"#CITY_NAME"                    =>  "Sao Paulo", ;
-						"#CITY_STATE_INITIALS"          =>  "SP";
-					}
 
-				context "and getting method result" expect (oCustomerDao:Insert(hRecord)) TO_BE_TRUTHY
-				context "and GetRecordSet()" expect (oCustomerDao:GetMessage()) TO_BE("Operacao realizada com sucesso!")
+				describe "When invalid data to insert"
+					hRecord := {}
+					context "and getting method result" expect (oCustomerDao:Insert(hRecord)) TO_BE_FALSY
+					context "and GetRecordSet()" expect (oCustomerDao:GetMessage()) TO_BE("Nenhum registro inserido!")
+				enddescribe
+
+				describe "When valid data to insert"
+					hRecord := { ;
+							"#CUSTOMER_NAME"                =>  "PRIMEIRO CLIENTE", ;
+							"#BIRTH_DATE"                   =>  "22/01/1980", ;
+							"#GENDER_ID"                    =>  "2", ;
+							"#ADDRESS_DESCRIPTION"          =>  "5th AV, 505", ;
+							"#COUNTRY_CODE_PHONE_NUMBER"    =>  "55", ;
+							"#AREA_PHONE_NUMBER"            =>  "11", ;
+							"#PHONE_NUMBER"                 =>  "555-55555", ;
+							"#CUSTOMER_EMAIL"               =>  "nome-cliente@mail.com", ;
+							"#DOCUMENT_NUMBER"              =>  "99876999-99", ;
+							"#ZIP_CODE_NUMBER"              =>  "04041-999", ;
+							"#CITY_NAME"                    =>  "Sao Paulo", ;
+							"#CITY_STATE_INITIALS"          =>  "SP";
+						}
+
+					context "and getting method result" expect (oCustomerDao:Insert(hRecord)) TO_BE_TRUTHY
+					context "and GetRecordSet()" expect (oCustomerDao:GetMessage()) TO_BE("Operacao realizada com sucesso!")
+				enddescribe
 			enddescribe
 
 			describe "oCustomerDao:FindById( nId ) -> lOk"

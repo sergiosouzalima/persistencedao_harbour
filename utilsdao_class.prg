@@ -62,6 +62,8 @@ METHOD Insert( pConnection, cSql ) CLASS UtilsDao
     LOCAL oError := NIL, nSqlErrorCode := 0
     TRY
         nSqlErrorCode := sqlite3_exec( pConnection, cSql )
+        lOk := sqlite3_total_changes(pConnection) > 0
+        cMessage := "Nenhum registro inserido!" UNLESS lOk
     CATCH oError
     FINALLY
         lOk := ::CheckIfErrors( lOk, nSqlErrorCode, oError )
@@ -76,6 +78,8 @@ METHOD Update( pConnection, cSql ) CLASS UtilsDao
     LOCAL oError := NIL, nSqlErrorCode := 0
     TRY
         nSqlErrorCode := sqlite3_exec( pConnection, cSql )
+        lOk := sqlite3_total_changes(pConnection) > 0
+        cMessage := "Nenhum registro alterado!" UNLESS lOk
     CATCH oError
     FINALLY
         lOk := ::CheckIfErrors( lOk, nSqlErrorCode, oError )
