@@ -134,6 +134,7 @@ METHOD FindById( nId ) CLASS CustomerDao
     LOCAL oUtils := UtilsDao():New()
     LOCAL lOk :=.F., cSql := SQL_CUSTOMER_FIND_BY_ID
     LOCAL hFindRecord := { => }
+    
     hFindRecord["#ID"] := Alltrim(Str(nId))
     cSql := hb_StrReplace( cSql, hFindRecord )
     lOk := oUtils:FindBy( ::pConnection, cSql )
