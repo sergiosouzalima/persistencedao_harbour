@@ -22,7 +22,7 @@
 FUNCTION Main()
 
 	begin tests
-		LOCAL oCustomerDao, hRecord, ahRecordSet, hRemoveChar := { "#" => "" }
+		LOCAL oCustomerDao, hRecord, ahRecordSet, hResultRecord
 
 		hb_vfErase("datasource.s3db")
 
@@ -37,7 +37,7 @@ FUNCTION Main()
 
 			describe "oCustomerDao:CreateTable() -> lOk"
 				context "When getting method result" expect (oCustomerDao:CreateTable()) TO_BE_TRUTHY
-				context "When getting operation message" expect (oCustomerDao:GetMessage()) TO_BE("Operacao realizada com sucesso!")
+				context "and GetRecordSet()" expect (oCustomerDao:GetMessage()) TO_BE("Operacao realizada com sucesso!")
 			enddescribe
 
 			describe "oCustomerDao:Insert( hRecord ) -> lOk"
@@ -56,34 +56,42 @@ FUNCTION Main()
 						"#CITY_STATE_INITIALS"          =>  "SP";
 					}
 
-				context "When getting method result" expect (oCustomerDao:Insert(hRecord)) TO_BE_TRUTHY
-				context "When getting operation message" expect (oCustomerDao:GetMessage()) TO_BE("Operacao realizada com sucesso!")
+				context "and getting method result" expect (oCustomerDao:Insert(hRecord)) TO_BE_TRUTHY
+				context "and GetRecordSet()" expect (oCustomerDao:GetMessage()) TO_BE("Operacao realizada com sucesso!")
 			enddescribe
 
-			describe "oCustomerDao:FindById( 1 ) -> lOk"
-				context "When getting method result" expect (oCustomerDao:FindById( 1 )) TO_BE_TRUTHY
-				context "When getting operation message" expect (oCustomerDao:GetMessage()) TO_BE("Consulta realizada com sucesso!")
+			describe "oCustomerDao:FindById( nId ) -> lOk"
 
-				ahRecordSet := oCustomerDao:GetRecordSet()
-				context "When getting operation record set" expect (ahRecordSet[01]["ID"]) TO_BE(1)
-				context "When getting operation record set" expect (ahRecordSet[01]["CUSTOMER_NAME"]) TO_BE("PRIMEIRO CLIENTE")
+				describe "When nId exists"
+					context "and checking result" expect (oCustomerDao:FindById( 1 )) TO_BE_TRUTHY
+					context "and GetRecordSet()" expect (oCustomerDao:GetMessage()) TO_BE("Consulta realizada com sucesso!")
 
-				hRecord := { ;
-					"ID"							=> 1, ;
-					"CUSTOMER_NAME"                	=>  "PRIMEIRO CLIENTE", ;
-					"BIRTH_DATE"                   	=>  "22/01/1980", ;
-					"GENDER_ID"                    	=>  2, ;
-					"ADDRESS_DESCRIPTION"          	=>  "5th AV, 505", ;
-					"COUNTRY_CODE_PHONE_NUMBER"    	=>  "55", ;
-					"AREA_PHONE_NUMBER"            	=>  "11", ;
-					"PHONE_NUMBER"                 	=>  "555-55555", ;
-					"CUSTOMER_EMAIL"               	=>  "nome-cliente@mail.com", ;
-					"DOCUMENT_NUMBER"              	=>  "99876999-99", ;
-					"ZIP_CODE_NUMBER"              	=>  "04041-999", ;
-					"CITY_NAME"                    	=>  "Sao Paulo", ;
-					"CITY_STATE_INITIALS"          	=>  "SP";
-				}
-				context "When getting operation record set" expect (ahRecordSet[01]) TO_BE(hRecord)
+					ahRecordSet := oCustomerDao:GetRecordSet() 
+					ahRecordSet[01] := hb_HDel( ahRecordSet[01], "CREATED_AT")
+					ahRecordSet[01] := hb_HDel( ahRecordSet[01], "UPDATED_AT")
+					
+					hResultRecord := { ;
+						"ID"							=> 1, ;
+						"CUSTOMER_NAME"                	=>  "PRIMEIRO CLIENTE", ;
+						"BIRTH_DATE"                   	=>  "22/01/1980", ;
+						"GENDER_ID"                    	=>  2, ;
+						"ADDRESS_DESCRIPTION"          	=>  "5th AV, 505", ;
+						"COUNTRY_CODE_PHONE_NUMBER"    	=>  "55", ;
+						"AREA_PHONE_NUMBER"            	=>  "11", ;
+						"PHONE_NUMBER"                 	=>  "555-55555", ;
+						"CUSTOMER_EMAIL"               	=>  "nome-cliente@mail.com", ;
+						"DOCUMENT_NUMBER"              	=>  "99876999-99", ;
+						"ZIP_CODE_NUMBER"              	=>  "04041-999", ;
+						"CITY_NAME"                    	=>  "Sao Paulo", ;
+						"CITY_STATE_INITIALS"          	=>  "SP";
+					}
+					context "and getting this method GetRecordSet()" expect (ahRecordSet[01]) TO_BE(hResultRecord)
+				enddescribe
+
+				describe "When nId does not exist"
+					context "and checking result" expect (oCustomerDao:FindById( 999 )) TO_BE_FALSY
+					context "and GetRecordSet()" expect (oCustomerDao:GetMessage()) TO_BE("Nenhum registro encontrado")
+				enddescribe			
 			enddescribe
 
 		enddescribe
