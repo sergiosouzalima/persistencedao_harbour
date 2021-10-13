@@ -61,7 +61,6 @@ METHOD Insert( pConnection, cSql ) CLASS UtilsDao
     LOCAL lOk := .T., cMessage := ""
     LOCAL oError := NIL, nSqlErrorCode := 0
     TRY
-        //cSql := hb_StrReplace( cSql, hRecord )
         nSqlErrorCode := sqlite3_exec( pConnection, cSql )
     CATCH oError
     FINALLY
@@ -76,7 +75,6 @@ METHOD Update( pConnection, cSql ) CLASS UtilsDao
     LOCAL lOk := .T., cMessage := ""
     LOCAL oError := NIL, nSqlErrorCode := 0
     TRY
-        //cSql := hb_StrReplace( cSql, hRecord )
         nSqlErrorCode := sqlite3_exec( pConnection, cSql )
     CATCH oError
     FINALLY
@@ -111,16 +109,17 @@ METHOD FeedRecordSet( pRecords ) CLASS UtilsDao
 RETURN ahRecordSet
 
 METHOD FindBy( pConnection, cSql ) CLASS UtilsDao
-    LOCAL lOk := .T., cMessage := "Nenhum registro encontrado"
+    LOCAL lOk := .T., cMessage := ""
     LOCAL oError := NIL, nSqlErrorCode := 0
     LOCAL pRecords := NIL, hResultRecordSet := { => }
     TRY
         pRecords := sqlite3_prepare( pConnection, cSql )
         ::ahRecordSet := ::FeedRecordSet( pRecords ) 
-        lOk := Len(::ahRecordSet) != 0
         nSqlErrorCode := sqlite3_errcode( pConnection )
         sqlite3_clear_bindings(pRecords)
         sqlite3_finalize(pRecords)
+        lOk := Len(::ahRecordSet) != 0
+        cMessage := "Nenhum registro encontrado" UNLESS lOk
     CATCH oError
     FINALLY
         pRecords := NIL
