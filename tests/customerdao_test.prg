@@ -107,12 +107,45 @@ FUNCTION Main()
 
 			enddescribe
 
+			describe "oCustomerDao:FindByCustomerName( cCustomerName ) -> lOk"
+
+				describe "When cCustomerName exists"
+					context "and checking result" expect (oCustomerDao:FindByCustomerName( "PRIMEIRO CLIENTE" )) TO_BE_TRUTHY
+
+					ahRecordSet := oCustomerDao:RecordSet() 
+					ahRecordSet[01] := hb_HDel( ahRecordSet[01], "CREATED_AT")
+					ahRecordSet[01] := hb_HDel( ahRecordSet[01], "UPDATED_AT")
+					
+					hResultRecord := { ;
+						"ID"							=> 1, ;
+						"CUSTOMER_NAME"                	=>  "PRIMEIRO CLIENTE", ;
+						"BIRTH_DATE"                   	=>  "22/01/1980", ;
+						"GENDER_ID"                    	=>  2, ;
+						"ADDRESS_DESCRIPTION"          	=>  "5th AV, 505", ;
+						"COUNTRY_CODE_PHONE_NUMBER"    	=>  "55", ;
+						"AREA_PHONE_NUMBER"            	=>  "11", ;
+						"PHONE_NUMBER"                 	=>  "555-55555", ;
+						"CUSTOMER_EMAIL"               	=>  "nome-cliente@mail.com", ;
+						"DOCUMENT_NUMBER"              	=>  "99876999-99", ;
+						"ZIP_CODE_NUMBER"              	=>  "04041-999", ;
+						"CITY_NAME"                    	=>  "Sao Paulo", ;
+						"CITY_STATE_INITIALS"          	=>  "SP";
+					}
+					context "and getting method RecordSet()" expect (ahRecordSet[01]) TO_BE(hResultRecord)
+				enddescribe
+
+				describe "When cCustomerName does not exist"
+					context "and checking result" expect (oCustomerDao:FindByCustomerName( "XYZ" )) TO_BE_FALSY
+				enddescribe
+
+			enddescribe
+
+
 			describe "oCustomerDao:Update( nId, hRecord ) -> lOk"
 
 				describe "When invalid data to update"
 					hRecord := {}
 					context "and getting method result" expect (oCustomerDao:Update( 999, hRecord)) TO_BE_FALSY
-					//context "and GetRecordSet()" expect (oCustomerDao:GetMessage()) TO_BE("Nenhum registro alterado")
 				enddescribe
 
 				describe "When valid data to update"
@@ -132,11 +165,23 @@ FUNCTION Main()
 						}
 
 					context "and getting method result" expect (oCustomerDao:Update( 1, hRecord )) TO_BE_TRUTHY
-					//context "and GetRecordSet()" expect (oCustomerDao:GetMessage()) TO_BE("Operacao realizada com sucesso!")
+				enddescribe
+			enddescribe
+
+			describe "oCustomerDao:Delete( nId ) -> lOk"
+				describe "When invalid data to delete"
+					context "and getting method result" expect (oCustomerDao:Delete( 999 )) TO_BE_FALSY
+				enddescribe
+
+				describe "When valid data to delete"
+					context "and getting method result" expect (oCustomerDao:Delete( 1 )) TO_BE_TRUTHY
 				enddescribe
 			enddescribe
 
 		enddescribe
+
+		oCustomerDao := oCustomerDao:Destroy()
+
 	endtests
 
 RETURN NIL

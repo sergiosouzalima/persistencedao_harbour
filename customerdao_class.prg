@@ -52,6 +52,9 @@
     " UPDATED_AT = current_timestamp"+;
     " WHERE ID = #ID;"
 
+#define SQL_CUSTOMER_DELETE ;
+    "DELETE FROM CUSTOMER WHERE ID = #ID;"
+
 #define SQL_CUSTOMER_FIND_BY_ID ;
     "SELECT" +;
     " ID," +;
@@ -72,6 +75,26 @@
     " FROM CUSTOMER" +;
     " WHERE ID = #ID;"
 
+#define SQL_CUSTOMER_FIND_BY_CUSTOMER_NAME ;
+    "SELECT" +;
+    " ID," +;
+    " CUSTOMER_NAME," +;
+    " BIRTH_DATE," +;
+    " GENDER_ID," +;
+    " ADDRESS_DESCRIPTION," +;
+    " COUNTRY_CODE_PHONE_NUMBER," +;
+    " AREA_PHONE_NUMBER," +;
+    " PHONE_NUMBER," +;
+    " CUSTOMER_EMAIL," +;
+    " DOCUMENT_NUMBER," +;
+    " ZIP_CODE_NUMBER," +;
+    " CITY_NAME," +; 
+    " CITY_STATE_INITIALS," +;
+    " CREATED_AT," +;
+    " UPDATED_AT" +;
+    " FROM CUSTOMER" +;
+    " WHERE CUSTOMER_NAME = '#CUSTOMER_NAME';"
+
 CREATE CLASS CustomerDao INHERIT DatasourceDao
     EXPORTED:
         METHOD  New() CONSTRUCTOR
@@ -79,9 +102,9 @@ CREATE CLASS CustomerDao INHERIT DatasourceDao
         METHOD  CreateTable()
         METHOD  Insert( hRecord )
         METHOD  Update( hRecord )
-        METHOD  FindById( nId ) 
-        METHOD  GetMessage()
-        METHOD  GetRecordSet() 
+        METHOD  Delete( nId )
+        METHOD  FindById( nId )
+        METHOD  FindByCustomerName( cCustomerName ) 
         METHOD  SqlErrorCode( nSqlErrorCode )       SETGET
         METHOD  ChangedRecords( nChangedRecords )   SETGET
         METHOD  Error( oError )                     SETGET
@@ -95,11 +118,8 @@ CREATE CLASS CustomerDao INHERIT DatasourceDao
         DATA pConnection    AS POINTER  INIT NIL
         
     HIDDEN: 
-        //DATA cMessage       AS STRING   INIT ""
-        //DATA ahRecordSet    AS ARRAY    INIT {}
-        METHOD isOk()       
-        METHOD isOkCreateTable() 
         METHOD FeedRecordSet( pRecords )
+        METHOD FindBy( hRecord, cSql )
 
     ERROR HANDLER OnError( xParam )
 ENDCLASS
@@ -128,12 +148,6 @@ METHOD RecordSet(ahRecordSet) CLASS CustomerDao
     ::ahRecordSet := ahRecordSet IF hb_IsArray(ahRecordSet)
 RETURN ::ahRecordSet
 
-METHOD isOk CLASS CustomerDao
-RETURN ::SqlErrorCode == 0 .AND. ::ChangedRecords > 0 .AND. ::Error == NIL
-
-METHOD isOkCreateTable CLASS CustomerDao
-RETURN ::SqlErrorCode == 0 .AND. ::ChangedRecords == 0 .AND. ::Error == NIL
-
 METHOD CreateTable() CLASS CustomerDao
     LOCAL oError := NIL
     TRY
@@ -160,133 +174,74 @@ METHOD FeedRecordSet( pRecords ) CLASS CustomerDao
     LOCAL nQtdCols := 0, nI := 0
     LOCAL nColType := 0, cColName := ""
 
-    // hb_Alert("Passo 01000")
-
     RETURN ahRecordSet IF sqlite3_column_count( pRecords ) <= 0
 
-    // hb_Alert("Passo 01100")
-
     DO WHILE sqlite3_step( pRecords ) == SQLITE_ROW
-
-        // hb_Alert("Passo 01200")
-
         nQtdCols := sqlite3_column_count( pRecords )
 
-        // hb_Alert("Passo 01300")
-
         IF nQtdCols > 0
-            // hb_Alert("Passo 01400")
             hRecordSet := { => }
             FOR nI := 1 TO nQtdCols
-                // hb_Alert("Passo 01500")
                 nColType := sqlite3_column_type( pRecords, nI )
                 cColName := sqlite3_column_name( pRecords, nI )
                 hRecordSet[cColName] := sqlite3_column_int( pRecords, nI )      IF nColType == 1 // SQLITE_INTEGER
                 hRecordSet[cColName] := sqlite3_column_text( pRecords, nI )     IF nColType == 3 // SQLITE_TEXT
                 hRecordSet[cColName] := sqlite3_column_blob( pRecords, nI )     IF nColType == 4 // SQLITE_BLOB
             NEXT
-            // hb_Alert("Passo 01600")
             AADD( ahRecordSet, hRecordSet )
         ENDIF
     ENDDO
-    // hb_Alert("Passo 01700")
 RETURN ahRecordSet
 
-METHOD FindById( nId ) CLASS CustomerDao
-    LOCAL oError := NIL, hRecord := { => }, pRecords := NIL
+METHOD FindBy( hRecord, cSql ) CLASS CustomerDao
+    LOCAL oError := NIL, pRecords := NIL
 
     TRY
-        // hb_Alert("Passo 010")
-        hRecord["#ID"] := Alltrim(Str(hb_defaultValue(nId, 0)))
-        // hb_Alert("Passo 020")
-        pRecords := sqlite3_prepare( ::pConnection, hb_StrReplace( SQL_CUSTOMER_FIND_BY_ID, hRecord ) )
-        // hb_Alert("Passo 030")
+        pRecords := sqlite3_prepare( ::pConnection, hb_StrReplace( cSql, hRecord ) )
         ::RecordSet := ::FeedRecordSet( pRecords ) 
-        // hb_Alert("Passo 02000")
         ::SqlErrorCode := sqlite3_errcode( ::pConnection )
-        // hb_Alert("Passo 02100")
         ::ChangedRecords := sqlite3_total_changes( ::pConnection )
-        // hb_Alert("Passo 02200")
     CATCH oError
         ::Error := oError
     FINALLY
         sqlite3_clear_bindings(pRecords)    UNLESS pRecords == NIL
         sqlite3_finalize(pRecords)          UNLESS pRecords == NIL
     ENDTRY
-    //hb_Alert(str(::SqlErrorCode))
-    //hb_Alert(str(::ChangedRecords))
-    //hb_Alert((::Error:Description))
 RETURN ::SqlErrorCode == SQLITE_DONE .AND. ::ChangedRecords == 1 .AND. ::Error == NIL .AND. Len(::RecordSet) > 0
 
-/*METHOD FindById( nId ) CLASS CustomerDao
-    LOCAL lOk := .T., cMessage := "", oError := NIL//, nSqlErrorCode := 0
-    LOCAL cSql := SQL_CUSTOMER_FIND_BY_ID
-    LOCAL oUtils := UtilsDao():New()
-    LOCAL hFindRecord := { => }
-    
-    hFindRecord["#ID"] := hb_defaultValue( Alltrim(Str(nId)), "0")
-    cSql := hb_StrReplace( cSql, hFindRecord )
-    lOk := oUtils:FindBy( ::pConnection, cSql )
-    ::cMessage := oUtils:GetMessage()
-    ::ahRecordSet := oUtils:GetRecordSet()
-    oUtils := oUtils:Destroy()
-RETURN lOk*/
+METHOD FindById( nId ) CLASS CustomerDao
+    LOCAL hRecord := { => }
+    hRecord["#ID"] := Alltrim(Str(hb_defaultValue(nId, 0)))
+RETURN ::FindBy( hRecord, SQL_CUSTOMER_FIND_BY_ID )
+
+METHOD FindByCustomerName( cCustomerName ) CLASS CustomerDao
+    LOCAL hRecord := { => }
+    hRecord["#CUSTOMER_NAME"] := hb_defaultValue(cCustomerName, "")
+RETURN ::FindBy( hRecord, SQL_CUSTOMER_FIND_BY_CUSTOMER_NAME )
+
+METHOD Delete( nId ) CLASS CustomerDao
+    LOCAL oError := NIL, hRecord := { => }
+
+    TRY
+        hRecord["#ID"] := Alltrim(Str(hb_defaultValue(nId, 0)))
+        ::SqlErrorCode := sqlite3_exec( ::pConnection, hb_StrReplace( SQL_CUSTOMER_DELETE, hRecord ) )
+        ::ChangedRecords := sqlite3_changes( ::pConnection )
+    CATCH oError
+        ::Error := oError
+    ENDTRY
+RETURN ::SqlErrorCode == 0 .AND. ::ChangedRecords == 1 .AND. ::Error == NIL
 
 METHOD Update( nId, hRecord ) CLASS CustomerDao
     LOCAL oError := NIL
 
     TRY
-        //::SqlErrorCode := 0 ; ::ChangedRecords := 0 ; ::Error := NIL
         hRecord["#ID"] := Alltrim(Str(hb_defaultValue(nId, 0)))
         ::SqlErrorCode := sqlite3_exec( ::pConnection, hb_StrReplace( SQL_CUSTOMER_UPDATE, hRecord ) )
         ::ChangedRecords := sqlite3_changes( ::pConnection )
     CATCH oError
         ::Error := oError
     ENDTRY
-    //hb_Alert(str(::SqlErrorCode))
-    //hb_Alert(str(::ChangedRecords))
-    
 RETURN ::SqlErrorCode == 0 .AND. ::ChangedRecords == 1 .AND. ::Error == NIL
-
-/*METHOD Update( nId, hRecord ) CLASS CustomerDao
-    LOCAL lOk := .T., cMessage := "", oError := NIL, nSqlErrorCode := 0
-    LOCAL cSql := SQL_CUSTOMER_UPDATE
-    LOCAL oUtils := UtilsDao():New()
-    LOCAL hUpdateRecord := hb_defaultValue( hRecord, { => } )
-
-    TRY
-        // hb_Alert("Passo 0100")
-
-        hUpdateRecord["#ID"] := hb_defaultValue( Alltrim(Str(nId)), "0")
-    
-        // hb_Alert("Passo 0200")
-    
-        cSql := hb_StrReplace( cSql, hUpdateRecord )
-    
-        // hb_Alert("Passo 0300 " + cSql)
-    
-        lOk := oUtils:Update( ::pConnection, cSql )
-    
-        // hb_Alert("Passo 0400")
-    CATCH oError
-    FINALLY
-        // hb_Alert("Passo 0355")
-        lOk := oUtils:CheckIfErrors( lOk, oError )
-        // hb_Alert("Passo 0356")
-        cMessage := "Operacao realizada com sucesso!" IF lOk
-        // hb_Alert("Passo 0357")
-        cMessage := oUtils:FormatErrorMsg( cMessage, cSql ) UNLESS lOk
-        // hb_Alert("Passo 0358")
-        ::cMessage := cMessage
-        oUtils := oUtils:Destroy()
-    ENDTRY
-RETURN lOk*/
-
-METHOD GetMessage() CLASS CustomerDao
-RETURN ::cMessage
-
-METHOD GetRecordSet() CLASS CustomerDao
-RETURN ::ahRecordSet
 
 METHOD ONERROR( xParam ) CLASS CustomerDao
     LOCAL cCol := __GetMessage(), xResult
