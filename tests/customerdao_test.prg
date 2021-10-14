@@ -15,7 +15,6 @@
 
 #include "hbclass.ch"
 #require "hbsqlit3"
-
 #include "../../hbexpect/lib/hbexpect.ch"
 
 
@@ -37,7 +36,9 @@ FUNCTION Main()
 
 			describe "oCustomerDao:CreateTable() -> lOk"
 				context "When getting method result" expect (oCustomerDao:CreateTable()) TO_BE_TRUTHY
-				context "and GetRecordSet()" expect (oCustomerDao:GetMessage()) TO_BE("Operacao realizada com sucesso!")
+				context "When getting SqlErrorCode" expect (oCustomerDao:SqlErrorCode()) TO_BE_ZERO
+				context "When getting ChangedRecords" expect (oCustomerDao:ChangedRecords()) TO_BE_ZERO
+				context "When getting Error" expect (oCustomerDao:Error()) TO_BE_NIL
 			enddescribe
 
 			describe "oCustomerDao:Insert( hRecord ) -> lOk"
@@ -45,7 +46,9 @@ FUNCTION Main()
 				describe "When invalid data to insert"
 					hRecord := {}
 					context "and getting method result" expect (oCustomerDao:Insert(hRecord)) TO_BE_FALSY
-					context "and GetRecordSet()" expect (oCustomerDao:GetMessage()) TO_BE("Nenhum registro inserido!")
+					context "When getting SqlErrorCode" expect (oCustomerDao:SqlErrorCode()) TO_BE(SQLITE_CONSTRAINT)
+					context "When getting ChangedRecords" expect (oCustomerDao:ChangedRecords()) TO_BE_ZERO
+					context "When getting Error" expect (oCustomerDao:Error()) TO_BE_NIL
 				enddescribe
 
 				describe "When valid data to insert"
@@ -65,7 +68,9 @@ FUNCTION Main()
 						}
 
 					context "and getting method result" expect (oCustomerDao:Insert(hRecord)) TO_BE_TRUTHY
-					context "and GetRecordSet()" expect (oCustomerDao:GetMessage()) TO_BE("Operacao realizada com sucesso!")
+					context "When getting SqlErrorCode" expect (oCustomerDao:SqlErrorCode()) TO_BE_ZERO
+					context "When getting ChangedRecords" expect (oCustomerDao:ChangedRecords()) TO_BE_ONE
+					context "When getting Error" expect (oCustomerDao:Error()) TO_BE_NIL
 				enddescribe
 			enddescribe
 
@@ -73,9 +78,8 @@ FUNCTION Main()
 
 				describe "When nId exists"
 					context "and checking result" expect (oCustomerDao:FindById( 1 )) TO_BE_TRUTHY
-					context "and GetRecordSet()" expect (oCustomerDao:GetMessage()) TO_BE("Consulta realizada com sucesso!")
 
-					ahRecordSet := oCustomerDao:GetRecordSet() 
+					ahRecordSet := oCustomerDao:RecordSet() 
 					ahRecordSet[01] := hb_HDel( ahRecordSet[01], "CREATED_AT")
 					ahRecordSet[01] := hb_HDel( ahRecordSet[01], "UPDATED_AT")
 					
@@ -94,13 +98,42 @@ FUNCTION Main()
 						"CITY_NAME"                    	=>  "Sao Paulo", ;
 						"CITY_STATE_INITIALS"          	=>  "SP";
 					}
-					context "and getting this method GetRecordSet()" expect (ahRecordSet[01]) TO_BE(hResultRecord)
+					context "and getting method RecordSet()" expect (ahRecordSet[01]) TO_BE(hResultRecord)
 				enddescribe
 
 				describe "When nId does not exist"
 					context "and checking result" expect (oCustomerDao:FindById( 999 )) TO_BE_FALSY
-					context "and GetRecordSet()" expect (oCustomerDao:GetMessage()) TO_BE("Nenhum registro encontrado")
-				enddescribe			
+				enddescribe
+
+			enddescribe
+
+			describe "oCustomerDao:Update( nId, hRecord ) -> lOk"
+
+				describe "When invalid data to update"
+					hRecord := {}
+					context "and getting method result" expect (oCustomerDao:Update( 999, hRecord)) TO_BE_FALSY
+					//context "and GetRecordSet()" expect (oCustomerDao:GetMessage()) TO_BE("Nenhum registro alterado")
+				enddescribe
+
+				describe "When valid data to update"
+					hRecord := { ;
+							"#CUSTOMER_NAME"                =>  "PRIMEIRO CLIENTE ALTERADO", ;
+							"#BIRTH_DATE"                   =>  "22/01/1980", ;
+							"#GENDER_ID"                    =>  "2", ;
+							"#ADDRESS_DESCRIPTION"          =>  "5th AV, 505", ;
+							"#COUNTRY_CODE_PHONE_NUMBER"    =>  "55", ;
+							"#AREA_PHONE_NUMBER"            =>  "11", ;
+							"#PHONE_NUMBER"                 =>  "555-55555", ;
+							"#CUSTOMER_EMAIL"               =>  "nome-cliente@mail.com", ;
+							"#DOCUMENT_NUMBER"              =>  "99876999-99", ;
+							"#ZIP_CODE_NUMBER"              =>  "04041-999", ;
+							"#CITY_NAME"                    =>  "Sao Paulo", ;
+							"#CITY_STATE_INITIALS"          =>  "SP";
+						}
+
+					context "and getting method result" expect (oCustomerDao:Update( 1, hRecord )) TO_BE_TRUTHY
+					//context "and GetRecordSet()" expect (oCustomerDao:GetMessage()) TO_BE("Operacao realizada com sucesso!")
+				enddescribe
 			enddescribe
 
 		enddescribe

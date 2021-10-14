@@ -21,6 +21,8 @@ CREATE CLASS UtilsDao
         METHOD FindBy( pConnection, cSql )
         METHOD GetMessage()
         METHOD GetRecordSet()
+        METHOD FormatErrorMsg( cMessage, cSql, nSqlErrorCode, pConnection )
+        METHOD CheckIfErrors( lOk, oError, nSqlErrorCode )
 
     PROTECTED:
         DATA pConnection    AS POINTER  INIT NIL
@@ -28,8 +30,6 @@ CREATE CLASS UtilsDao
     HIDDEN: 
         DATA cMessage       AS STRING   INIT ""
         DATA ahRecordSet    AS ARRAY    INIT {}
-        METHOD FormatErrorMsg( pDataBase, nSqlErrorCode, cSql )
-        METHOD CheckIfErrors(lOk, nSqlErrorCode, oError) 
         METHOD AdjustDate(dDate)
         METHOD FeedRecordSet( pRecords )
 
@@ -44,52 +44,57 @@ METHOD Destroy() CLASS UtilsDao
 RETURN Self
 
 METHOD CreateTable(pConnection, cSql) CLASS UtilsDao
-    LOCAL lOk := .T., cMessage := ""
-    LOCAL oError := NIL, nSqlErrorCode := 0
+    LOCAL lOk := .T., cMessage := "", oError := NIL, nSqlErrorCode := 0
     TRY
         nSqlErrorCode := sqlite3_exec(pConnection, cSql)
     CATCH oError
     FINALLY
-        lOk := ::CheckIfErrors( lOk, nSqlErrorCode, oError )
+        lOk := ::CheckIfErrors( lOk, oError, nSqlErrorCode )
         cMessage := "Operacao realizada com sucesso!" IF lOk
-        cMessage := ::FormatErrorMsg( pConnection, nSqlErrorCode, cSql, cMessage ) UNLESS lOk
+        cMessage := ::FormatErrorMsg( cMessage, cSql, nSqlErrorCode, pConnection ) UNLESS lOk
         ::cMessage := cMessage
     ENDTRY
 RETURN lOk
 
 METHOD Insert( pConnection, cSql ) CLASS UtilsDao
-    LOCAL lOk := .T., cMessage := ""
-    LOCAL oError := NIL, nSqlErrorCode := 0
+    LOCAL lOk := .T., cMessage := "", oError := NIL, nSqlErrorCode := 0
     TRY
         nSqlErrorCode := sqlite3_exec( pConnection, cSql )
         lOk := sqlite3_total_changes(pConnection) > 0
         cMessage := "Nenhum registro inserido!" UNLESS lOk
     CATCH oError
     FINALLY
-        lOk := ::CheckIfErrors( lOk, nSqlErrorCode, oError )
+        lOk := ::CheckIfErrors( lOk, oError, nSqlErrorCode )
         cMessage := "Operacao realizada com sucesso!" IF lOk
-        cMessage := ::FormatErrorMsg( pConnection, nSqlErrorCode, cSql, cMessage ) UNLESS lOk
+        cMessage := ::FormatErrorMsg( cMessage, cSql, nSqlErrorCode, pConnection ) UNLESS lOk
         ::cMessage := cMessage
     ENDTRY
 RETURN lOk
 
 METHOD Update( pConnection, cSql ) CLASS UtilsDao
-    LOCAL lOk := .T., cMessage := ""
-    LOCAL oError := NIL, nSqlErrorCode := 0
+    LOCAL lOk := .T., cMessage := "", oError := NIL, nSqlErrorCode := 0
     TRY
+        // hb_Alert("Passo 0350")
         nSqlErrorCode := sqlite3_exec( pConnection, cSql )
+        // hb_Alert("Passo 0352")
         lOk := sqlite3_total_changes(pConnection) > 0
+        // hb_Alert("Passo 0353")
         cMessage := "Nenhum registro alterado!" UNLESS lOk
+        // hb_Alert("Passo 0354")
     CATCH oError
     FINALLY
-        lOk := ::CheckIfErrors( lOk, nSqlErrorCode, oError )
+        // hb_Alert("Passo 0355")
+        lOk := ::CheckIfErrors( lOk, oError, nSqlErrorCode )
+        // hb_Alert("Passo 0356")
         cMessage := "Operacao realizada com sucesso!" IF lOk
-        cMessage := ::FormatErrorMsg( pConnection, nSqlErrorCode, cSql, cMessage ) UNLESS lOk
+        // hb_Alert("Passo 0357")
+        cMessage := ::FormatErrorMsg( cMessage, cSql, nSqlErrorCode, pConnection ) UNLESS lOk
+        // hb_Alert("Passo 0358")
         ::cMessage := cMessage
     ENDTRY
 RETURN lOk
 
-METHOD FeedRecordSet( pRecords ) CLASS UtilsDao
+METHOD FeedRecordSet( pRecords ) CLASS UtilsDao    
     LOCAL ahRecordSet := {}, hRecordSet := { => }
     LOCAL nQtdCols := 0, nI := 0
     LOCAL nColType := 0, cColName := ""
@@ -113,8 +118,7 @@ METHOD FeedRecordSet( pRecords ) CLASS UtilsDao
 RETURN ahRecordSet
 
 METHOD FindBy( pConnection, cSql ) CLASS UtilsDao
-    LOCAL lOk := .T., cMessage := ""
-    LOCAL oError := NIL, nSqlErrorCode := 0
+    LOCAL lOk := .T., cMessage := "", oError := NIL, nSqlErrorCode := 0
     LOCAL pRecords := NIL, hResultRecordSet := { => }
     TRY
         pRecords := sqlite3_prepare( pConnection, cSql )
@@ -127,9 +131,9 @@ METHOD FindBy( pConnection, cSql ) CLASS UtilsDao
     CATCH oError
     FINALLY
         pRecords := NIL
-        lOk := ::CheckIfErrors( lOk, nSqlErrorCode, oError )
+        lOk := ::CheckIfErrors( lOk, oError, nSqlErrorCode )
         cMessage := "Consulta realizada com sucesso!" IF lOk
-        cMessage := ::FormatErrorMsg( pConnection, nSqlErrorCode, cSql, cMessage ) UNLESS lOk
+        cMessage := ::FormatErrorMsg( cMessage, cSql, nSqlErrorCode, pConnection ) UNLESS lOk
         ::cMessage := cMessage
     ENDTRY
 RETURN lOk
@@ -144,15 +148,18 @@ METHOD AdjustDate(dDate) CLASS UtilsDao
     LOCAL cDate := DToS(dDate)    
 RETURN  SubStr(cDate,7,2) + "/" + SubStr(cDate,5,2) + "/" + SubStr(cDate,1,4)
 
-METHOD CheckIfErrors(lOk, nSqlErrorCode, oError) CLASS UtilsDao
-    LOCAL lOkResult := lOk .AND. nSqlErrorCode != SQLITE_ERROR .AND. oError == NIL
+METHOD CheckIfErrors(lOk, oError, nSqlErrorCode) CLASS UtilsDao
+    LOCAL nSqlErrorCodeRes := hb_defaultValue( nSqlErrorCode, SQLITE_ERROR )
+    LOCAL lOkResult := lOk .AND. nSqlErrorCodeRes != SQLITE_ERROR .AND. oError == NIL
 RETURN lOkResult
 
-METHOD FormatErrorMsg( pConnection, nSqlErrorCode, cSql, cMessage ) CLASS UtilsDao
+METHOD FormatErrorMsg( cMessage, cSql, nSqlErrorCode, pConnection ) CLASS UtilsDao
+    LOCAL nSqlErrorCodeRes := hb_defaultValue( nSqlErrorCode, 0 )
+    LOCAL pConnectionRes := hb_defaultValue( pConnection, NIL )
     LOCAL cMessageResult := cMessage
     cMessageResult := ;
-        "Error: "   + LTrim(Str(nSqlErrorCode)) + ". " + ;
-        "SQL: "     + sqlite3_errmsg(pConnection) + ". " + cSql IF Empty(cMessageResult)
+        "Error: "   + LTrim(Str(nSqlErrorCodeRes)) + ". " + ;
+        "SQL: "     + sqlite3_errmsg(pConnectionRes) + ". " + cSql IF Empty(cMessageResult)
 RETURN cMessageResult
 
 METHOD ONERROR( xParam ) CLASS UtilsDao
