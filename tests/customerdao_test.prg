@@ -20,7 +20,7 @@
 
 FUNCTION Main()
 
-	begin tests
+	begin hbexpect
 		LOCAL oCustomerDao, hRecord, ahRecordSet, hResultRecord
 
 		hb_vfErase("datasource.s3db")
@@ -182,6 +182,6 @@ FUNCTION Main()
 
 		oCustomerDao := oCustomerDao:Destroy()
 
-	endtests
+	endhbexpect
 
 RETURN NIL
