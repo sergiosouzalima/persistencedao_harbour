@@ -97,8 +97,11 @@
 
 CREATE CLASS CustomerDao INHERIT DatasourceDao
     EXPORTED:
-        METHOD  New( pConnection ) CONSTRUCTOR
+        METHOD  New( cConnection ) CONSTRUCTOR
         METHOD  Destroy()
+        METHOD  getConnection() 
+        METHOD  Destroy()
+        METHOD  closeConnection()
         METHOD  CreateTable()
         METHOD  Insert( hRecord )
         METHOD  Update( hRecord )
@@ -115,22 +118,28 @@ CREATE CLASS CustomerDao INHERIT DatasourceDao
         DATA    ahRecordSet                         AS ARRAY    INIT {}
 
     PROTECTED:
-        DATA pConnection    AS POINTER  INIT NIL
+        DATA    pConnection    AS POINTER  INIT NIL
         
     HIDDEN: 
-        METHOD FeedRecordSet( pRecords )
-        METHOD FindBy( hRecord, cSql )
+        METHOD  FeedRecordSet( pRecords )
+        METHOD  FindBy( hRecord, cSql )
 
     ERROR HANDLER OnError( xParam )
 ENDCLASS
 
-METHOD New( pConnection ) CLASS CustomerDao
-    ::pConnection := ::Super:New():getConnection( hb_defaultValue(pConnection, "") )
+METHOD New( cConnection ) CLASS CustomerDao
+    ::pConnection := ::Super:New( hb_defaultValue(cConnection, "datasource.s3db") ):getConnection()
 RETURN Self
 
 METHOD Destroy() CLASS CustomerDao
     Self := NIL
 RETURN Self
+
+METHOD getConnection() CLASS CustomerDao
+RETURN ::pConnection
+
+METHOD closeConnection() CLASS CustomerDao
+RETURN ::Destroy()
 
 METHOD SqlErrorCode(nSqlErrorCode) CLASS CustomerDao
     ::nSqlErrorCode := nSqlErrorCode IF hb_IsNumeric(nSqlErrorCode)
@@ -191,27 +200,42 @@ METHOD FeedRecordSet( pRecords ) CLASS CustomerDao
             AADD( ahRecordSet, hRecordSet )
         ENDIF
     ENDDO
+    //hb_Alert("passo 05350 " + str(len(ahRecordSet)) )
 RETURN ahRecordSet
 
 METHOD FindBy( hRecord, cSql ) CLASS CustomerDao
     LOCAL oError := NIL, pRecords := NIL
 
     TRY
+        ////hb_Alert("passo 05200")
         pRecords := sqlite3_prepare( ::pConnection, hb_StrReplace( cSql, hRecord ) )
+        //hb_Alert("passo 05300 " + hb_StrReplace( cSql, hRecord ))
         ::RecordSet := ::FeedRecordSet( pRecords ) 
+        //hb_Alert("passo 05360 " + str(len(::RecordSet)) )
+        ////hb_Alert("passo 05400")
         ::SqlErrorCode := sqlite3_errcode( ::pConnection )
+        ////hb_Alert("passo 05500")
         ::ChangedRecords := sqlite3_total_changes( ::pConnection )
+        ////hb_Alert("passo 05600")
     CATCH oError
+        ////hb_Alert("passo 05700")
         ::Error := oError
     FINALLY
+        ////hb_Alert("passo 05800")
         sqlite3_clear_bindings(pRecords)    UNLESS pRecords == NIL
+        ////hb_Alert("passo 05900")
         sqlite3_finalize(pRecords)          UNLESS pRecords == NIL
     ENDTRY
-RETURN ::SqlErrorCode == SQLITE_DONE .AND. ::ChangedRecords == 1 .AND. ::Error == NIL .AND. Len(::RecordSet) > 0
+    ////hb_Alert("passo 06000")
+    //hb_Alert( "::SqlErrorCode  " + str(::SqlErrorCode)) 
+    //hb_Alert( "::ChangedRecords" + str(::ChangedRecords)) 
+    //hb_Alert( "::Len(::RecordSet) " + str(Len(::RecordSet)))
+RETURN ::SqlErrorCode == SQLITE_DONE .AND. ::ChangedRecords == 0 .AND. ::Error == NIL .AND. Len(::RecordSet) > 0
 
 METHOD FindById( nId ) CLASS CustomerDao
     LOCAL hRecord := { => }
     hRecord["#ID"] := Alltrim(Str(hb_defaultValue(nId, 0)))
+    ////hb_Alert("passo 05000")
 RETURN ::FindBy( hRecord, SQL_CUSTOMER_FIND_BY_ID )
 
 METHOD FindByCustomerName( cCustomerName ) CLASS CustomerDao

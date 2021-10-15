@@ -25,9 +25,8 @@ FUNCTION Main()
 
 		hb_vfErase("datasource.s3db")
 
-		oCustomerDao := CustomerDao():New()
-
 		describe "CustomerDao Class"
+			oCustomerDao := CustomerDao():New()
 			describe "When instantiate"
 				describe "CustomerDao():New( [cDataBaseName] ) --> oDataSource"
 					context "and new method" expect(oCustomerDao) TO_BE_CLASS_NAME("CustomerDao")
@@ -73,7 +72,9 @@ FUNCTION Main()
 					context "When getting Error" expect (oCustomerDao:Error()) TO_BE_NIL
 				enddescribe
 			enddescribe
+			oCustomerDao := oCustomerDao:Destroy()
 
+			oCustomerDao := CustomerDao():New()
 			describe "oCustomerDao:FindById( nId ) -> lOk"
 
 				describe "When nId exists"
@@ -106,7 +107,9 @@ FUNCTION Main()
 				enddescribe
 
 			enddescribe
+			oCustomerDao := oCustomerDao:Destroy()
 
+			oCustomerDao := CustomerDao():New()
 			describe "oCustomerDao:FindByCustomerName( cCustomerName ) -> lOk"
 
 				describe "When cCustomerName exists"
@@ -139,8 +142,9 @@ FUNCTION Main()
 				enddescribe
 
 			enddescribe
+			oCustomerDao := oCustomerDao:Destroy()
 
-
+			oCustomerDao := CustomerDao():New()
 			describe "oCustomerDao:Update( nId, hRecord ) -> lOk"
 
 				describe "When invalid data to update"
@@ -167,7 +171,9 @@ FUNCTION Main()
 					context "and getting method result" expect (oCustomerDao:Update( 1, hRecord )) TO_BE_TRUTHY
 				enddescribe
 			enddescribe
+			oCustomerDao := oCustomerDao:Destroy()
 
+			oCustomerDao := CustomerDao():New()
 			describe "oCustomerDao:Delete( nId ) -> lOk"
 				describe "When invalid data to delete"
 					context "and getting method result" expect (oCustomerDao:Delete( 999 )) TO_BE_FALSY
@@ -177,10 +183,9 @@ FUNCTION Main()
 					context "and getting method result" expect (oCustomerDao:Delete( 1 )) TO_BE_TRUTHY
 				enddescribe
 			enddescribe
+			oCustomerDao := oCustomerDao:Destroy()
 
 		enddescribe
-
-		oCustomerDao := oCustomerDao:Destroy()
 
 	endhbexpect
 
