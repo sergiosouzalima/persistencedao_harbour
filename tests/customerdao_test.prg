@@ -29,7 +29,7 @@ FUNCTION Main()
 
 		describe "CustomerDao Class"
 			describe "When instantiate"
-				describe "DatasourceDao():New( [cDataBaseName] ) --> oDataSource"
+				describe "CustomerDao():New( [cDataBaseName] ) --> oDataSource"
 					context "and new method" expect(oCustomerDao) TO_BE_CLASS_NAME("CustomerDao")
 				enddescribe
 			enddescribe
