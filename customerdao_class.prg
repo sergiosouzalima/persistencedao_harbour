@@ -261,4 +261,3 @@ METHOD ONERROR( xParam ) CLASS CustomerDao
     ENDIF
     ? "*** Error => ", xResult
 RETURN xResult
-
