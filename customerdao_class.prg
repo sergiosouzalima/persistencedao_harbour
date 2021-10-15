@@ -114,7 +114,6 @@ CREATE CLASS CustomerDao INHERIT DatasourceDao
         METHOD  RecordSet(ahRecordSet)              SETGET
         DATA    nSqlErrorCode                       AS INTEGER  INIT 0
         DATA    nChangedRecords                     AS INTEGER  INIT 0
-        DATA    oError                              AS OBJECT   INIT NIL
         DATA    ahRecordSet                         AS ARRAY    INIT {}
 
     PROTECTED:
@@ -163,9 +162,8 @@ METHOD CreateTable() CLASS CustomerDao
         ::SqlErrorCode := sqlite3_exec( ::pConnection, SQL_CUSTOMER_CREATE_TABLE )
         ::ChangedRecords := sqlite3_total_changes( ::pConnection ) 
     CATCH oError
-        ::Error := oError
     ENDTRY
-RETURN ::SqlErrorCode == 0 .AND. ::ChangedRecords == 0 .AND. ::Error == NIL
+RETURN ::SqlErrorCode == 0 .AND. ::ChangedRecords == 0 .AND. oError == NIL
 
 METHOD Insert( hRecord ) CLASS CustomerDao
     LOCAL oError := NIL
@@ -174,9 +172,8 @@ METHOD Insert( hRecord ) CLASS CustomerDao
         ::SqlErrorCode := sqlite3_exec( ::pConnection, hb_StrReplace( SQL_CUSTOMER_INSERT, hRecord ) )
         ::ChangedRecords := sqlite3_changes( ::pConnection )
     CATCH oError
-        ::Error := oError
     ENDTRY
-RETURN ::SqlErrorCode == 0 .AND. ::ChangedRecords > 0 .AND. ::Error == NIL
+RETURN ::SqlErrorCode == 0 .AND. ::ChangedRecords > 0 .AND. oError == NIL
 
 METHOD FeedRecordSet( pRecords ) CLASS CustomerDao    
     LOCAL ahRecordSet := {}, hRecordSet := { => }
@@ -219,7 +216,6 @@ METHOD FindBy( hRecord, cSql ) CLASS CustomerDao
         ////hb_Alert("passo 05600")
     CATCH oError
         ////hb_Alert("passo 05700")
-        ::Error := oError
     FINALLY
         ////hb_Alert("passo 05800")
         sqlite3_clear_bindings(pRecords)    UNLESS pRecords == NIL
@@ -230,7 +226,7 @@ METHOD FindBy( hRecord, cSql ) CLASS CustomerDao
     //hb_Alert( "::SqlErrorCode  " + str(::SqlErrorCode)) 
     //hb_Alert( "::ChangedRecords" + str(::ChangedRecords)) 
     //hb_Alert( "::Len(::RecordSet) " + str(Len(::RecordSet)))
-RETURN ::SqlErrorCode == SQLITE_DONE .AND. ::ChangedRecords == 0 .AND. ::Error == NIL .AND. Len(::RecordSet) > 0
+RETURN ::SqlErrorCode == SQLITE_DONE .AND. ::ChangedRecords == 0 .AND. oError == NIL .AND. Len(::RecordSet) > 0
 
 METHOD FindById( nId ) CLASS CustomerDao
     LOCAL hRecord := { => }
@@ -251,7 +247,6 @@ METHOD Delete( nId ) CLASS CustomerDao
         ::SqlErrorCode := sqlite3_exec( ::pConnection, hb_StrReplace( SQL_CUSTOMER_DELETE, hRecord ) )
         ::ChangedRecords := sqlite3_changes( ::pConnection )
     CATCH oError
-        ::Error := oError
     ENDTRY
 RETURN ::SqlErrorCode == 0 .AND. ::ChangedRecords == 1 .AND. ::Error == NIL
 
@@ -263,9 +258,8 @@ METHOD Update( nId, hRecord ) CLASS CustomerDao
         ::SqlErrorCode := sqlite3_exec( ::pConnection, hb_StrReplace( SQL_CUSTOMER_UPDATE, hRecord ) )
         ::ChangedRecords := sqlite3_changes( ::pConnection )
     CATCH oError
-        ::Error := oError
     ENDTRY
-RETURN ::SqlErrorCode == 0 .AND. ::ChangedRecords == 1 .AND. ::Error == NIL
+RETURN ::SqlErrorCode == 0 .AND. ::ChangedRecords == 1 .AND. oError == NIL
 
 METHOD ONERROR( xParam ) CLASS CustomerDao
     LOCAL cCol := __GetMessage(), xResult
