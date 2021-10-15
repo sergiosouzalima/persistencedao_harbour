@@ -97,7 +97,7 @@
 
 CREATE CLASS CustomerDao INHERIT DatasourceDao
     EXPORTED:
-        METHOD  New() CONSTRUCTOR
+        METHOD  New( pConnection ) CONSTRUCTOR
         METHOD  Destroy()
         METHOD  CreateTable()
         METHOD  Insert( hRecord )
@@ -124,8 +124,8 @@ CREATE CLASS CustomerDao INHERIT DatasourceDao
     ERROR HANDLER OnError( xParam )
 ENDCLASS
 
-METHOD New() CLASS CustomerDao
-    ::pConnection := ::Super:New():getConnection()
+METHOD New( pConnection ) CLASS CustomerDao
+    ::pConnection := ::Super:New():getConnection( hb_defaultValue(pConnection, "") )
 RETURN Self
 
 METHOD Destroy() CLASS CustomerDao
