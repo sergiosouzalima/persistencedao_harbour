@@ -107,21 +107,27 @@ CREATE CLASS CustomerDao INHERIT DatasourceDao
         METHOD  Update( hRecord )
         METHOD  Delete( nId )
         METHOD  FindById( nId )
-        METHOD  FindByCustomerName( cCustomerName ) 
-        METHOD  SqlErrorCode( nSqlErrorCode )       SETGET
+        METHOD  FindByCustomerName( cCustomerName )
+        // ----------------
+        // Status indicators
         METHOD  ChangedRecords( nChangedRecords )   SETGET
-        METHOD  Error( oError )                     SETGET
-        METHOD  RecordSet(ahRecordSet)              SETGET
-        DATA    nSqlErrorCode                       AS INTEGER  INIT 0
         DATA    nChangedRecords                     AS INTEGER  INIT 0
+        METHOD  RecordSet( ahRecordSet )            SETGET
         DATA    ahRecordSet                         AS ARRAY    INIT {}
-
+        METHOD  SqlErrorCode( nSqlErrorCode )       SETGET
+        DATA    nSqlErrorCode                       AS INTEGER  INIT 0
+        METHOD  Error( oError )                     SETGET
+        DATA    oError                              AS OBJECT   INIT NIL
+        METHOD  Found()
+        METHOD  NotFound()
+        // ----------------
     PROTECTED:
         DATA    pConnection    AS POINTER  INIT NIL
         
     HIDDEN: 
         METHOD  FeedRecordSet( pRecords )
         METHOD  FindBy( hRecord, cSql )
+        METHOD InitStatusIndicators()
 
     ERROR HANDLER OnError( xParam )
 ENDCLASS
@@ -140,40 +146,56 @@ RETURN ::pConnection
 METHOD closeConnection() CLASS CustomerDao
 RETURN ::Destroy()
 
-METHOD SqlErrorCode(nSqlErrorCode) CLASS CustomerDao
-    ::nSqlErrorCode := nSqlErrorCode IF hb_IsNumeric(nSqlErrorCode)
-RETURN ::nSqlErrorCode
-
+// ----------------
+// Status indicators
 METHOD ChangedRecords(nChangedRecords) CLASS CustomerDao
     ::nChangedRecords := nChangedRecords IF hb_IsNumeric(nChangedRecords)
 RETURN ::nChangedRecords
-
-METHOD Error(oError) CLASS CustomerDao
-    ::oError := oError IF hb_IsObject(oError) .OR. oError == NIL
-RETURN ::oError
 
 METHOD RecordSet(ahRecordSet) CLASS CustomerDao
     ::ahRecordSet := ahRecordSet IF hb_IsArray(ahRecordSet)
 RETURN ::ahRecordSet
 
+METHOD SqlErrorCode(nSqlErrorCode) CLASS CustomerDao
+    ::nSqlErrorCode := nSqlErrorCode IF hb_IsNumeric(nSqlErrorCode)
+RETURN ::nSqlErrorCode
+
+METHOD Error(oError) CLASS CustomerDao
+    ::oError := oError IF hb_IsObject(oError) .OR. oError == NIL
+RETURN ::oError
+
+METHOD InitStatusIndicators() CLASS CustomerDao
+    ::ChangedRecords := 0 ; ::RecordSet := {} ; ::SqlErrorCode := 0 ; ::Error := NIL
+RETURN NIL
+
+METHOD Found() CLASS CustomerDao
+RETURN Len(::RecordSet) > 0
+
+METHOD NotFound() CLASS CustomerDao
+RETURN !::Found()
+// ----------------
+
 METHOD CreateTable() CLASS CustomerDao
     LOCAL oError := NIL
     TRY
+        ::InitStatusIndicators()
         ::SqlErrorCode := sqlite3_exec( ::pConnection, SQL_CUSTOMER_CREATE_TABLE )
         ::ChangedRecords := sqlite3_total_changes( ::pConnection ) 
     CATCH oError
+        ::Error := oError
     ENDTRY
-RETURN ::SqlErrorCode == 0 .AND. ::ChangedRecords == 0 .AND. oError == NIL
+RETURN NIL
 
 METHOD Insert( hRecord ) CLASS CustomerDao
     LOCAL oError := NIL
-
     TRY
+        ::InitStatusIndicators()
         ::SqlErrorCode := sqlite3_exec( ::pConnection, hb_StrReplace( SQL_CUSTOMER_INSERT, hRecord ) )
         ::ChangedRecords := sqlite3_changes( ::pConnection )
     CATCH oError
+        ::Error := oError
     ENDTRY
-RETURN ::SqlErrorCode == 0 .AND. ::ChangedRecords > 0 .AND. oError == NIL
+RETURN NIL
 
 METHOD FeedRecordSet( pRecords ) CLASS CustomerDao    
     LOCAL ahRecordSet := {}, hRecordSet := { => }
@@ -197,45 +219,34 @@ METHOD FeedRecordSet( pRecords ) CLASS CustomerDao
             AADD( ahRecordSet, hRecordSet )
         ENDIF
     ENDDO
-    //hb_Alert("passo 05350 " + str(len(ahRecordSet)) )
 RETURN ahRecordSet
 
 METHOD FindBy( hRecord, cSql ) CLASS CustomerDao
     LOCAL oError := NIL, pRecords := NIL
 
     TRY
-        ////hb_Alert("passo 05200")
+        ::InitStatusIndicators()
         pRecords := sqlite3_prepare( ::pConnection, hb_StrReplace( cSql, hRecord ) )
-        //hb_Alert("passo 05300 " + hb_StrReplace( cSql, hRecord ))
         ::RecordSet := ::FeedRecordSet( pRecords ) 
-        //hb_Alert("passo 05360 " + str(len(::RecordSet)) )
-        ////hb_Alert("passo 05400")
         ::SqlErrorCode := sqlite3_errcode( ::pConnection )
-        ////hb_Alert("passo 05500")
         ::ChangedRecords := sqlite3_total_changes( ::pConnection )
-        ////hb_Alert("passo 05600")
     CATCH oError
-        ////hb_Alert("passo 05700")
+        ::Error := oError
     FINALLY
-        ////hb_Alert("passo 05800")
         sqlite3_clear_bindings(pRecords)    UNLESS pRecords == NIL
-        ////hb_Alert("passo 05900")
         sqlite3_finalize(pRecords)          UNLESS pRecords == NIL
     ENDTRY
-    ////hb_Alert("passo 06000")
-    //hb_Alert( "::SqlErrorCode  " + str(::SqlErrorCode)) 
-    //hb_Alert( "::ChangedRecords" + str(::ChangedRecords)) 
-    //hb_Alert( "::Len(::RecordSet) " + str(Len(::RecordSet)))
-RETURN ::SqlErrorCode == SQLITE_DONE .AND. ::ChangedRecords == 0 .AND. oError == NIL .AND. Len(::RecordSet) > 0
+RETURN NIL
 
 METHOD FindById( nId ) CLASS CustomerDao
     LOCAL hRecord := { => }
+    ::InitStatusIndicators()
     hRecord["#ID"] := Alltrim(Str(hb_defaultValue(nId, 0)))
-    ////hb_Alert("passo 05000")
 RETURN ::FindBy( hRecord, SQL_CUSTOMER_FIND_BY_ID )
 
 METHOD FindByCustomerName( cCustomerName ) CLASS CustomerDao
     LOCAL hRecord := { => }
+    ::InitStatusIndicators()
     hRecord["#CUSTOMER_NAME"] := hb_defaultValue(cCustomerName, "")
 RETURN ::FindBy( hRecord, SQL_CUSTOMER_FIND_BY_CUSTOMER_NAME )
 
@@ -243,23 +254,27 @@ METHOD Delete( nId ) CLASS CustomerDao
     LOCAL oError := NIL, hRecord := { => }
 
     TRY
+        ::InitStatusIndicators()
         hRecord["#ID"] := Alltrim(Str(hb_defaultValue(nId, 0)))
         ::SqlErrorCode := sqlite3_exec( ::pConnection, hb_StrReplace( SQL_CUSTOMER_DELETE, hRecord ) )
         ::ChangedRecords := sqlite3_changes( ::pConnection )
     CATCH oError
+        ::Error := oError
     ENDTRY
-RETURN ::SqlErrorCode == 0 .AND. ::ChangedRecords == 1 .AND. ::Error == NIL
+RETURN NIL
 
 METHOD Update( nId, hRecord ) CLASS CustomerDao
     LOCAL oError := NIL
 
     TRY
+        ::InitStatusIndicators()
         hRecord["#ID"] := Alltrim(Str(hb_defaultValue(nId, 0)))
         ::SqlErrorCode := sqlite3_exec( ::pConnection, hb_StrReplace( SQL_CUSTOMER_UPDATE, hRecord ) )
         ::ChangedRecords := sqlite3_changes( ::pConnection )
     CATCH oError
+        ::Error := oError
     ENDTRY
-RETURN ::SqlErrorCode == 0 .AND. ::ChangedRecords == 1 .AND. oError == NIL
+RETURN NIL
 
 METHOD ONERROR( xParam ) CLASS CustomerDao
     LOCAL cCol := __GetMessage(), xResult

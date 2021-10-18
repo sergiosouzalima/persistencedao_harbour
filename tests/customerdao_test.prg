@@ -33,18 +33,18 @@ FUNCTION Main()
 				enddescribe
 			enddescribe
 
-			describe "oCustomerDao:CreateTable() -> lOk"
-				context "When getting method result" expect (oCustomerDao:CreateTable()) TO_BE_TRUTHY
+			describe "oCustomerDao:CreateTable()"
+				oCustomerDao:CreateTable()
 				context "When getting SqlErrorCode" expect (oCustomerDao:SqlErrorCode()) TO_BE_ZERO
 				context "When getting ChangedRecords" expect (oCustomerDao:ChangedRecords()) TO_BE_ZERO
 				context "When getting Error" expect (oCustomerDao:Error()) TO_BE_NIL
 			enddescribe
 
-			describe "oCustomerDao:Insert( hRecord ) -> lOk"
-
+			describe "oCustomerDao:Insert( hRecord )"
+	
 				describe "When invalid data to insert"
 					hRecord := {}
-					context "and getting method result" expect (oCustomerDao:Insert(hRecord)) TO_BE_FALSY
+					oCustomerDao:Insert(hRecord)
 					context "When getting SqlErrorCode" expect (oCustomerDao:SqlErrorCode()) TO_BE(SQLITE_CONSTRAINT)
 					context "When getting ChangedRecords" expect (oCustomerDao:ChangedRecords()) TO_BE_ZERO
 					context "When getting Error" expect (oCustomerDao:Error()) TO_BE_NIL
@@ -66,7 +66,7 @@ FUNCTION Main()
 							"#CITY_STATE_INITIALS"          =>  "SP";
 						}
 
-					context "and getting method result" expect (oCustomerDao:Insert(hRecord)) TO_BE_TRUTHY
+					oCustomerDao:Insert(hRecord)
 					context "When getting SqlErrorCode" expect (oCustomerDao:SqlErrorCode()) TO_BE_ZERO
 					context "When getting ChangedRecords" expect (oCustomerDao:ChangedRecords()) TO_BE_ONE
 					context "When getting Error" expect (oCustomerDao:Error()) TO_BE_NIL
@@ -75,11 +75,11 @@ FUNCTION Main()
 			oCustomerDao := oCustomerDao:Destroy()
 
 			oCustomerDao := CustomerDao():New()
-			describe "oCustomerDao:FindById( nId ) -> lOk"
+			describe "oCustomerDao:FindById( nId )"
 
 				describe "When nId exists"
-					context "and checking result" expect (oCustomerDao:FindById( 1 )) TO_BE_TRUTHY
-
+					oCustomerDao:FindById( 1 )
+					
 					ahRecordSet := oCustomerDao:RecordSet() 
 					ahRecordSet[01] := hb_HDel( ahRecordSet[01], "CREATED_AT")
 					ahRecordSet[01] := hb_HDel( ahRecordSet[01], "UPDATED_AT")
@@ -100,21 +100,30 @@ FUNCTION Main()
 						"CITY_STATE_INITIALS"          	=>  "SP";
 					}
 					context "and getting method RecordSet()" expect (ahRecordSet[01]) TO_BE(hResultRecord)
+					// SQLITE_DONE  101 /* sqlite3_step() has finished executing */
+					context "When getting SqlErrorCode" expect (oCustomerDao:SqlErrorCode()) TO_BE(101) 
+					context "When getting ChangedRecords" expect (oCustomerDao:ChangedRecords()) TO_BE_ZERO
+					context "When getting Error" expect (oCustomerDao:Error()) TO_BE_NIL
 				enddescribe
 
 				describe "When nId does not exist"
-					context "and checking result" expect (oCustomerDao:FindById( 999 )) TO_BE_FALSY
+					oCustomerDao:FindById( 999 )
+					// SQLITE_DONE  101 /* sqlite3_step() has finished executing */
+					context "When getting SqlErrorCode" expect (oCustomerDao:SqlErrorCode()) TO_BE(101)
+					context "When getting ChangedRecords" expect (oCustomerDao:ChangedRecords()) TO_BE_ZERO
+					context "When getting Error" expect (oCustomerDao:Error()) TO_BE_NIL
+					context "When getting RecordSet" expect (oCustomerDao:RecordSet()) TO_BE({})
 				enddescribe
 
 			enddescribe
 			oCustomerDao := oCustomerDao:Destroy()
 
 			oCustomerDao := CustomerDao():New()
-			describe "oCustomerDao:FindByCustomerName( cCustomerName ) -> lOk"
+			describe "oCustomerDao:FindByCustomerName( cCustomerName )"
 
 				describe "When cCustomerName exists"
-					context "and checking result" expect (oCustomerDao:FindByCustomerName( "PRIMEIRO CLIENTE" )) TO_BE_TRUTHY
-
+					oCustomerDao:FindByCustomerName( "PRIMEIRO CLIENTE" )
+					
 					ahRecordSet := oCustomerDao:RecordSet() 
 					ahRecordSet[01] := hb_HDel( ahRecordSet[01], "CREATED_AT")
 					ahRecordSet[01] := hb_HDel( ahRecordSet[01], "UPDATED_AT")
@@ -135,21 +144,30 @@ FUNCTION Main()
 						"CITY_STATE_INITIALS"          	=>  "SP";
 					}
 					context "and getting method RecordSet()" expect (ahRecordSet[01]) TO_BE(hResultRecord)
+					// SQLITE_DONE  101 /* sqlite3_step() has finished executing */
+					context "When getting SqlErrorCode" expect (oCustomerDao:SqlErrorCode()) TO_BE(101) 
+					context "When getting ChangedRecords" expect (oCustomerDao:ChangedRecords()) TO_BE_ZERO
+					context "When getting Error" expect (oCustomerDao:Error()) TO_BE_NIL
 				enddescribe
 
 				describe "When cCustomerName does not exist"
-					context "and checking result" expect (oCustomerDao:FindByCustomerName( "XYZ" )) TO_BE_FALSY
+					oCustomerDao:FindByCustomerName( "XYZ" )
+					// SQLITE_DONE  101 /* sqlite3_step() has finished executing */
+					context "When getting SqlErrorCode" expect (oCustomerDao:SqlErrorCode()) TO_BE(101) 
+					context "When getting ChangedRecords" expect (oCustomerDao:ChangedRecords()) TO_BE_ZERO
+					context "When getting Error" expect (oCustomerDao:Error()) TO_BE_NIL
+					context "When getting RecordSet" expect (oCustomerDao:RecordSet()) TO_BE({})
 				enddescribe
 
 			enddescribe
 			oCustomerDao := oCustomerDao:Destroy()
 
 			oCustomerDao := CustomerDao():New()
-			describe "oCustomerDao:Update( nId, hRecord ) -> lOk"
+			describe "oCustomerDao:Update( nId, hRecord )"
 
 				describe "When invalid data to update"
 					hRecord := {}
-					context "and getting method result" expect (oCustomerDao:Update( 999, hRecord)) TO_BE_FALSY
+					oCustomerDao:Update( 999, hRecord)
 				enddescribe
 
 				describe "When valid data to update"
@@ -168,7 +186,10 @@ FUNCTION Main()
 							"#CITY_STATE_INITIALS"          =>  "SP";
 						}
 
-					context "and getting method result" expect (oCustomerDao:Update( 1, hRecord )) TO_BE_TRUTHY
+					oCustomerDao:Update( 1, hRecord )
+					context "When getting SqlErrorCode" expect (oCustomerDao:SqlErrorCode()) TO_BE_ZERO
+					context "When getting ChangedRecords" expect (oCustomerDao:ChangedRecords()) TO_BE_ONE
+					context "When getting Error" expect (oCustomerDao:Error()) TO_BE_NIL
 				enddescribe
 			enddescribe
 			oCustomerDao := oCustomerDao:Destroy()
@@ -176,11 +197,17 @@ FUNCTION Main()
 			oCustomerDao := CustomerDao():New()
 			describe "oCustomerDao:Delete( nId ) -> lOk"
 				describe "When invalid data to delete"
-					context "and getting method result" expect (oCustomerDao:Delete( 999 )) TO_BE_FALSY
+					oCustomerDao:Delete( 999 )
+					context "When getting SqlErrorCode" expect (oCustomerDao:SqlErrorCode()) TO_BE_ZERO
+					context "When getting ChangedRecords" expect (oCustomerDao:ChangedRecords()) TO_BE_ZERO
+					context "When getting Error" expect (oCustomerDao:Error()) TO_BE_NIL
 				enddescribe
 
 				describe "When valid data to delete"
-					context "and getting method result" expect (oCustomerDao:Delete( 1 )) TO_BE_TRUTHY
+					oCustomerDao:Delete( 1 )
+					context "When getting SqlErrorCode" expect (oCustomerDao:SqlErrorCode()) TO_BE_ZERO
+					context "When getting ChangedRecords" expect (oCustomerDao:ChangedRecords()) TO_BE_ONE
+					context "When getting Error" expect (oCustomerDao:Error()) TO_BE_NIL
 				enddescribe
 			enddescribe
 			oCustomerDao := oCustomerDao:Destroy()
