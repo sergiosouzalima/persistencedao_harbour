@@ -17,7 +17,6 @@
 #require "hbsqlit3"
 #include "../../hbexpect/lib/hbexpect.ch"
 
-
 FUNCTION Main()
 
 	begin hbexpect
