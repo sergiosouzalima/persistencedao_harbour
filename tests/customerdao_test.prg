@@ -40,11 +40,11 @@ FUNCTION Main()
 			enddescribe
 
 			describe "oCustomerDao:Insert( hRecord )"
-	
+
 				describe "When invalid data to insert"
 					hRecord := {}
 					oCustomerDao:Insert(hRecord)
-					context "When getting SqlErrorCode" expect (oCustomerDao:SqlErrorCode()) TO_BE(SQLITE_CONSTRAINT)
+					context "When getting SqlErrorCode" expect (oCustomerDao:SqlErrorCode()) TO_BE_ZERO
 					context "When getting ChangedRecords" expect (oCustomerDao:ChangedRecords()) TO_BE_ZERO
 					context "When getting Error" expect (oCustomerDao:Error()) TO_BE_NIL
 				enddescribe
@@ -78,16 +78,16 @@ FUNCTION Main()
 
 				describe "When nId exists"
 					oCustomerDao:FindById( 1 )
-					
-					ahRecordSet := oCustomerDao:RecordSet() 
+
+					ahRecordSet := oCustomerDao:RecordSet()
 					ahRecordSet[01] := hb_HDel( ahRecordSet[01], "CREATED_AT")
 					ahRecordSet[01] := hb_HDel( ahRecordSet[01], "UPDATED_AT")
-					
+
 					hResultRecord := { ;
-						"ID"							=> 1, ;
+						"ID"							=> "1", ;
 						"CUSTOMER_NAME"                	=>  "PRIMEIRO CLIENTE", ;
 						"BIRTH_DATE"                   	=>  "22/01/1980", ;
-						"GENDER_ID"                    	=>  2, ;
+						"GENDER_ID"                    	=>  "2", ;
 						"ADDRESS_DESCRIPTION"          	=>  "5th AV, 505", ;
 						"COUNTRY_CODE_PHONE_NUMBER"    	=>  "55", ;
 						"AREA_PHONE_NUMBER"            	=>  "11", ;
@@ -100,7 +100,7 @@ FUNCTION Main()
 					}
 					context "and getting method RecordSet()" expect (ahRecordSet[01]) TO_BE(hResultRecord)
 					// SQLITE_DONE  101 /* sqlite3_step() has finished executing */
-					context "When getting SqlErrorCode" expect (oCustomerDao:SqlErrorCode()) TO_BE(101) 
+					context "When getting SqlErrorCode" expect (oCustomerDao:SqlErrorCode()) TO_BE(101)
 					context "When getting ChangedRecords" expect (oCustomerDao:ChangedRecords()) TO_BE_ZERO
 					context "When getting Error" expect (oCustomerDao:Error()) TO_BE_NIL
 				enddescribe
@@ -122,16 +122,16 @@ FUNCTION Main()
 
 				describe "When cCustomerName exists"
 					oCustomerDao:FindByCustomerName( "PRIMEIRO CLIENTE" )
-					
-					ahRecordSet := oCustomerDao:RecordSet() 
+
+					ahRecordSet := oCustomerDao:RecordSet()
 					ahRecordSet[01] := hb_HDel( ahRecordSet[01], "CREATED_AT")
 					ahRecordSet[01] := hb_HDel( ahRecordSet[01], "UPDATED_AT")
-					
+
 					hResultRecord := { ;
-						"ID"							=> 1, ;
+						"ID"							=> "1", ;
 						"CUSTOMER_NAME"                	=>  "PRIMEIRO CLIENTE", ;
 						"BIRTH_DATE"                   	=>  "22/01/1980", ;
-						"GENDER_ID"                    	=>  2, ;
+						"GENDER_ID"                    	=>  "2", ;
 						"ADDRESS_DESCRIPTION"          	=>  "5th AV, 505", ;
 						"COUNTRY_CODE_PHONE_NUMBER"    	=>  "55", ;
 						"AREA_PHONE_NUMBER"            	=>  "11", ;
@@ -144,7 +144,7 @@ FUNCTION Main()
 					}
 					context "and getting method RecordSet()" expect (ahRecordSet[01]) TO_BE(hResultRecord)
 					// SQLITE_DONE  101 /* sqlite3_step() has finished executing */
-					context "When getting SqlErrorCode" expect (oCustomerDao:SqlErrorCode()) TO_BE(101) 
+					context "When getting SqlErrorCode" expect (oCustomerDao:SqlErrorCode()) TO_BE(101)
 					context "When getting ChangedRecords" expect (oCustomerDao:ChangedRecords()) TO_BE_ZERO
 					context "When getting Error" expect (oCustomerDao:Error()) TO_BE_NIL
 				enddescribe
@@ -152,7 +152,7 @@ FUNCTION Main()
 				describe "When cCustomerName does not exist"
 					oCustomerDao:FindByCustomerName( "XYZ" )
 					// SQLITE_DONE  101 /* sqlite3_step() has finished executing */
-					context "When getting SqlErrorCode" expect (oCustomerDao:SqlErrorCode()) TO_BE(101) 
+					context "When getting SqlErrorCode" expect (oCustomerDao:SqlErrorCode()) TO_BE(101)
 					context "When getting ChangedRecords" expect (oCustomerDao:ChangedRecords()) TO_BE_ZERO
 					context "When getting Error" expect (oCustomerDao:Error()) TO_BE_NIL
 					context "When getting RecordSet" expect (oCustomerDao:RecordSet()) TO_BE({})

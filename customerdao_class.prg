@@ -9,7 +9,7 @@
 
 #include "hbclass.ch"
 #require "hbsqlit3"
-#include "custom_commands_v1.0.0.ch"
+#include "../custom_commands_v1.0.0.ch"
 
 #define SQL_CUSTOMER_CREATE_TABLE ;
     "CREATE TABLE IF NOT EXISTS CUSTOMER(" + ;
@@ -219,7 +219,36 @@ METHOD Insert( hRecord ) CLASS CustomerDao
     LOCAL oError := NIL
     TRY
         ::InitStatusIndicators()
+        BREAK IF Empty(hRecord)
         ::SqlErrorCode := sqlite3_exec( ::pConnection, hb_StrReplace( SQL_CUSTOMER_INSERT, hRecord ) )
+        ::ChangedRecords := sqlite3_changes( ::pConnection )
+    CATCH oError
+        ::Error := oError
+    ENDTRY
+RETURN NIL
+
+METHOD Update( nId, hRecord ) CLASS CustomerDao
+    LOCAL oError := NIL
+
+    TRY
+        ::InitStatusIndicators()
+        BREAK IF Empty(hRecord) .OR. Empty(nId)
+        hRecord["#ID"] := Alltrim(Str(hb_defaultValue(nId, 0)))
+        ::SqlErrorCode := sqlite3_exec( ::pConnection, hb_StrReplace( SQL_CUSTOMER_UPDATE, hRecord ) )
+        ::ChangedRecords := sqlite3_changes( ::pConnection )
+    CATCH oError
+        ::Error := oError
+    ENDTRY
+RETURN NIL
+
+METHOD Delete( nId ) CLASS CustomerDao
+    LOCAL oError := NIL, hRecord := { => }
+
+    TRY
+        ::InitStatusIndicators()
+        BREAK IF Empty(nId)
+        hRecord["#ID"] := Alltrim(Str(hb_defaultValue(nId, 0)))
+        ::SqlErrorCode := sqlite3_exec( ::pConnection, hb_StrReplace( SQL_CUSTOMER_DELETE, hRecord ) )
         ::ChangedRecords := sqlite3_changes( ::pConnection )
     CATCH oError
         ::Error := oError
@@ -241,9 +270,9 @@ METHOD FeedRecordSet( pRecords ) CLASS CustomerDao
             FOR nI := 1 TO nQtdCols
                 nColType := sqlite3_column_type( pRecords, nI )
                 cColName := sqlite3_column_name( pRecords, nI )
-                hRecordSet[cColName] := sqlite3_column_int( pRecords, nI )      IF nColType == 1 // SQLITE_INTEGER
-                hRecordSet[cColName] := sqlite3_column_text( pRecords, nI )     IF nColType == 3 // SQLITE_TEXT
-                hRecordSet[cColName] := sqlite3_column_blob( pRecords, nI )     IF nColType == 4 // SQLITE_BLOB
+                hRecordSet[cColName] := AllTrim(Str(sqlite3_column_int( pRecords, nI )))    IF nColType == 1 // SQLITE_INTEGER
+                hRecordSet[cColName] := sqlite3_column_text( pRecords, nI )                 IF nColType == 3 // SQLITE_TEXT
+                hRecordSet[cColName] := sqlite3_column_blob( pRecords, nI )                 IF nColType == 4 // SQLITE_BLOB
             NEXT
             AADD( ahRecordSet, hRecordSet )
         ENDIF
@@ -287,32 +316,6 @@ METHOD FindCustomerAvoidDup( nId, cCustomerName ) CLASS CustomerDao
     hRecord["#ID"] := AllTrim(Str(hb_defaultValue(nId, 0)))
     hRecord["#CUSTOMER_NAME"] := hb_defaultValue(cCustomerName, "")
     ::FindBy( hRecord, SQL_CUSTOMER_AVOID_DUP )
-RETURN NIL
-
-METHOD Delete( nId ) CLASS CustomerDao
-    LOCAL oError := NIL, hRecord := { => }
-
-    TRY
-        ::InitStatusIndicators()
-        hRecord["#ID"] := Alltrim(Str(hb_defaultValue(nId, 0)))
-        ::SqlErrorCode := sqlite3_exec( ::pConnection, hb_StrReplace( SQL_CUSTOMER_DELETE, hRecord ) )
-        ::ChangedRecords := sqlite3_changes( ::pConnection )
-    CATCH oError
-        ::Error := oError
-    ENDTRY
-RETURN NIL
-
-METHOD Update( nId, hRecord ) CLASS CustomerDao
-    LOCAL oError := NIL
-
-    TRY
-        ::InitStatusIndicators()
-        hRecord["#ID"] := Alltrim(Str(hb_defaultValue(nId, 0)))
-        ::SqlErrorCode := sqlite3_exec( ::pConnection, hb_StrReplace( SQL_CUSTOMER_UPDATE, hRecord ) )
-        ::ChangedRecords := sqlite3_changes( ::pConnection )
-    CATCH oError
-        ::Error := oError
-    ENDTRY
 RETURN NIL
 
 METHOD ONERROR( xParam ) CLASS CustomerDao
