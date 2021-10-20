@@ -1,13 +1,13 @@
 #
-# $Id: customerdao_test.hbp
+# $Id: persistencedao_test.hbp
 #
 # How to compile:
-# hbmk2 customerdao_test.hbp
+# hbmk2 persistencedao_test.hbp
 #
 
 -w2
 -gc3
--ocustomerdao_test
+-opersistencedao_test
 {linux}-ldl
 -lpthread
 
@@ -16,9 +16,9 @@ hbsqlit3.hbc
 
 ../../hbexpect/lib/hbexpect.prg
 ../../datasourcedao_harbour/datasourcedao_class.prg
-../customerdao_class.prg
+../persistencedao_class.prg
 ### ../utilsdao_class.prg
-customerdao_test.prg
+persistencedao_test.prg
 
 # Special parameters for LINUX/GTK
 {linux}-lm

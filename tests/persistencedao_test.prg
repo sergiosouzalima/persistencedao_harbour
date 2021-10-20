@@ -1,15 +1,15 @@
 /*
     System.......: DAO
-    Program......: customerdao_class.prg
-    Description..: Belongs to Model DaoCustomer to allow access to a datasource named Customer.
+    Program......: persistence_class.prg
+    Description..: Belongs to Model Dao to allow access to a datasource named Customer.
     Author.......: Sergio Lima
     Updated at...: Oct, 2021
 
 	How to compile:
-	hbmk2 customerdao_test.hbp
+	hbmk2 persistence_test.hbp
 
 	How to run:
-	./customerdao_test
+	./persistence_test
 
 */
 
