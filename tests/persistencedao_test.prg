@@ -1,7 +1,7 @@
 /*
     System.......: DAO
     Program......: persistence_class.prg
-    Description..: Belongs to Model Dao to allow access to a datasource named Customer.
+    Description..: Belongs to Model Dao to allow access to a datasource.
     Author.......: Sergio Lima
     Updated at...: Oct, 2021
 
