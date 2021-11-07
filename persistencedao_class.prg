@@ -9,14 +9,13 @@
 
 #include "hbclass.ch"
 #require "hbsqlit3"
-#include "../custom_commands_v1.0.0.ch"
+#include "custom_commands_v1.0.0.ch"
 
 CREATE CLASS PersistenceDao INHERIT DatasourceDao
     EXPORTED:
         METHOD  New( cConnection ) CONSTRUCTOR
         METHOD  Destroy()
         METHOD  getConnection()
-        METHOD  Destroy()
         METHOD  closeConnection()
         // ----------------
         // Status indicators
@@ -28,6 +27,10 @@ CREATE CLASS PersistenceDao INHERIT DatasourceDao
         DATA    nSqlErrorCode                       AS INTEGER  INIT 0
         METHOD  Error( oError )                     SETGET
         DATA    oError                              AS OBJECT   INIT NIL
+
+        DATA    nNumberOfRecords           AS INTEGER  INIT 0
+        METHOD  NumberOfRecords( nNumberOfRecords ) SETGET
+
         METHOD  Found()
         METHOD  NotFound()
         METHOD  RecordSetLength()
@@ -92,6 +95,11 @@ RETURN ::oError
 METHOD InitStatusIndicators() CLASS PersistenceDao
     ::ChangedRecords := 0 ; ::RecordSet := {} ; ::SqlErrorCode := 0 ; ::Error := NIL
 RETURN NIL
+
+METHOD NumberOfRecords( nNumberOfRecords ) CLASS PersistenceDao
+    ::nNumberOfRecords := nNumberOfRecords IF hb_IsNumeric(nNumberOfRecords)
+RETURN ::nNumberOfRecords
+
 //-------------------
 
 METHOD ExecuteCommand( cSql ) CLASS PersistenceDao
