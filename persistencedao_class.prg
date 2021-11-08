@@ -28,6 +28,12 @@ CREATE CLASS PersistenceDao INHERIT DatasourceDao
         METHOD  Error( oError )                     SETGET
         DATA    oError                              AS OBJECT   INIT NIL
 
+        DATA cCreatedAt                 AS STRING   INIT ""
+        METHOD CreatedAt( cCreatedAt ) SETGET
+
+        DATA cUpdatedAt                 AS STRING   INIT ""
+        METHOD UpdatedAt( cUpdatedAt ) SETGET
+
         DATA    nNumberOfRecords           AS INTEGER  INIT 0
         METHOD  NumberOfRecords( nNumberOfRecords ) SETGET
 
@@ -100,6 +106,13 @@ METHOD NumberOfRecords( nNumberOfRecords ) CLASS PersistenceDao
     ::nNumberOfRecords := nNumberOfRecords IF hb_IsNumeric(nNumberOfRecords)
 RETURN ::nNumberOfRecords
 
+METHOD CreatedAt( cCreatedAt ) CLASS PersistenceDao
+    ::cCreatedAt := cCreatedAt IF hb_IsString(cCreatedAt)
+RETURN ::cCreatedAt
+
+METHOD UpdatedAt( cUpdatedAt ) CLASS PersistenceDao
+    ::cUpdatedAt := cUpdatedAt IF hb_IsString(cUpdatedAt)
+RETURN ::cUpdatedAt
 //-------------------
 
 METHOD ExecuteCommand( cSql ) CLASS PersistenceDao
