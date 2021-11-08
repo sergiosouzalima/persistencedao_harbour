@@ -27,16 +27,18 @@ CREATE CLASS PersistenceDao INHERIT DatasourceDao
         DATA    nSqlErrorCode                       AS INTEGER  INIT 0
         METHOD  Error( oError )                     SETGET
         DATA    oError                              AS OBJECT   INIT NIL
-
-        DATA cCreatedAt                 AS STRING   INIT ""
-        METHOD CreatedAt( cCreatedAt ) SETGET
-
-        DATA cUpdatedAt                 AS STRING   INIT ""
-        METHOD UpdatedAt( cUpdatedAt ) SETGET
-
-        DATA    nNumberOfRecords           AS INTEGER  INIT 0
+        DATA    cID                                 AS STRING   INIT ""
+        METHOD  Id( cID )                           SETGET
+        DATA    cCreatedAt                          AS STRING   INIT ""
+        METHOD  CreatedAt( cCreatedAt )             SETGET
+        DATA    cUpdatedAt                          AS STRING   INIT ""
+        METHOD  UpdatedAt( cUpdatedAt )             SETGET
+        DATA    cMessage                            AS STRING   INIT ""
+        METHOD  Message( cMessage )                 SETGET
+        DATA    lValid                              AS LOGICAL  INIT .F.
+        METHOD  Valid( lValid )                     SETGET
+        DATA    nNumberOfRecords                    AS INTEGER  INIT 0
         METHOD  NumberOfRecords( nNumberOfRecords ) SETGET
-
         METHOD  Found()
         METHOD  NotFound()
         METHOD  RecordSetLength()
@@ -55,7 +57,7 @@ CREATE CLASS PersistenceDao INHERIT DatasourceDao
 ENDCLASS
 
 METHOD New( cConnection ) CLASS PersistenceDao
-    ::pConnection := ::Super:New( hb_defaultValue(cConnection, "datasource.s3db") ):getConnection()
+    ::pConnection := ::Super:New( hb_defaultValue(cConnection, "database.s3db") ):getConnection()
 RETURN Self
 
 METHOD Destroy() CLASS PersistenceDao
@@ -102,6 +104,10 @@ METHOD InitStatusIndicators() CLASS PersistenceDao
     ::ChangedRecords := 0 ; ::RecordSet := {} ; ::SqlErrorCode := 0 ; ::Error := NIL
 RETURN NIL
 
+METHOD Id( cID ) CLASS PersistenceDao
+    ::cID := cID IF hb_IsString(cID)
+RETURN ::cID
+
 METHOD NumberOfRecords( nNumberOfRecords ) CLASS PersistenceDao
     ::nNumberOfRecords := nNumberOfRecords IF hb_IsNumeric(nNumberOfRecords)
 RETURN ::nNumberOfRecords
@@ -113,6 +119,14 @@ RETURN ::cCreatedAt
 METHOD UpdatedAt( cUpdatedAt ) CLASS PersistenceDao
     ::cUpdatedAt := cUpdatedAt IF hb_IsString(cUpdatedAt)
 RETURN ::cUpdatedAt
+
+METHOD Message( cMessage ) CLASS PersistenceDao
+    ::cMessage := cMessage IF hb_IsString(cMessage)
+RETURN ::cMessage
+
+METHOD Valid( lValid ) CLASS PersistenceDao
+    ::lValid := lValid IF hb_isLogical(lValid)
+RETURN ::lValid
 //-------------------
 
 METHOD ExecuteCommand( cSql ) CLASS PersistenceDao
