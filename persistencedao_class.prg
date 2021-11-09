@@ -12,32 +12,21 @@
 #include "custom_commands_v1.0.0.ch"
 
 CREATE CLASS PersistenceDao INHERIT DatasourceDao
+
     EXPORTED:
         METHOD  New( cConnection ) CONSTRUCTOR
         METHOD  Destroy()
         METHOD  getConnection()
         METHOD  closeConnection()
-        // ----------------
-        // Status indicators
         METHOD  ChangedRecords( nChangedRecords )   SETGET
-        DATA    nChangedRecords                     AS INTEGER  INIT 0
         METHOD  RecordSet( ahRecordSet )            SETGET
-        DATA    ahRecordSet                         AS ARRAY    INIT {}
         METHOD  SqlErrorCode( nSqlErrorCode )       SETGET
-        DATA    nSqlErrorCode                       AS INTEGER  INIT 0
         METHOD  Error( oError )                     SETGET
-        DATA    oError                              AS OBJECT   INIT NIL
-        DATA    cID                                 AS STRING   INIT ""
         METHOD  Id( cID )                           SETGET
-        DATA    cCreatedAt                          AS STRING   INIT ""
         METHOD  CreatedAt( cCreatedAt )             SETGET
-        DATA    cUpdatedAt                          AS STRING   INIT ""
         METHOD  UpdatedAt( cUpdatedAt )             SETGET
-        DATA    cMessage                            AS STRING   INIT ""
         METHOD  Message( cMessage )                 SETGET
-        DATA    lValid                              AS LOGICAL  INIT .F.
         METHOD  Valid( lValid )                     SETGET
-        DATA    nNumberOfRecords                    AS INTEGER  INIT 0
         METHOD  NumberOfRecords( nNumberOfRecords ) SETGET
         METHOD  Found()
         METHOD  NotFound()
@@ -45,12 +34,22 @@ CREATE CLASS PersistenceDao INHERIT DatasourceDao
         METHOD  FoundMany()
         // ----------------
     PROTECTED:
-        DATA    pConnection    AS POINTER  INIT NIL
+        DATA    pConnection         AS POINTER  INIT NIL
         METHOD  ExecuteCommand( cSql )
         METHOD  FindBy( hRecord, cSql )
         METHOD  InitStatusIndicators()
 
     HIDDEN:
+        DATA    nChangedRecords     AS INTEGER  INIT 0
+        DATA    ahRecordSet         AS ARRAY    INIT {}
+        DATA    nSqlErrorCode       AS INTEGER  INIT 0
+        DATA    oError              AS OBJECT   INIT NIL
+        DATA    cID                 AS STRING   INIT ""
+        DATA    cCreatedAt          AS STRING   INIT ""
+        DATA    cUpdatedAt          AS STRING   INIT ""
+        DATA    cMessage            AS STRING   INIT ""
+        DATA    lValid              AS LOGICAL  INIT .F.
+        DATA    nNumberOfRecords    AS INTEGER  INIT 0
         METHOD  FeedRecordSet( pRecords )
 
     ERROR HANDLER OnError( xParam )
