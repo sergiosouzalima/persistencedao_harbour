@@ -3,7 +3,7 @@
     Program......: persistence_class.prg
     Description..: Belongs to Model DAO to allow access to a datasource.
     Author.......: Sergio Lima
-    Updated at...: Oct, 2021
+    Updated at...: Nov, 2021
 */
 
 
@@ -27,7 +27,6 @@ CREATE CLASS PersistenceDao INHERIT DatasourceDao
         METHOD  UpdatedAt( cUpdatedAt )             SETGET
         METHOD  Message( cMessage )                 SETGET
         METHOD  Valid( lValid )                     SETGET
-        METHOD  NumberOfRecords( nNumberOfRecords ) SETGET
         METHOD  Found()
         METHOD  NotFound()
         METHOD  RecordSetLength()
@@ -49,7 +48,6 @@ CREATE CLASS PersistenceDao INHERIT DatasourceDao
         DATA    cUpdatedAt          AS STRING   INIT ""
         DATA    cMessage            AS STRING   INIT ""
         DATA    lValid              AS LOGICAL  INIT .F.
-        DATA    nNumberOfRecords    AS INTEGER  INIT 0
         METHOD  FeedRecordSet( pRecords )
 
     ERROR HANDLER OnError( xParam )
@@ -106,10 +104,6 @@ RETURN NIL
 METHOD Id( cID ) CLASS PersistenceDao
     ::cID := cID IF hb_IsString(cID)
 RETURN ::cID
-
-METHOD NumberOfRecords( nNumberOfRecords ) CLASS PersistenceDao
-    ::nNumberOfRecords := nNumberOfRecords IF hb_IsNumeric(nNumberOfRecords)
-RETURN ::nNumberOfRecords
 
 METHOD CreatedAt( cCreatedAt ) CLASS PersistenceDao
     ::cCreatedAt := cCreatedAt IF hb_IsString(cCreatedAt)
