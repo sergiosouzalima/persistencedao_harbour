@@ -9,7 +9,7 @@
 
 #include "hbclass.ch"
 #require "hbsqlit3"
-#include "custom_commands_v1.0.0.ch"
+#include "custom_commands_v1.1.0.ch"
 
 CREATE CLASS PersistenceDao INHERIT DatasourceDao
 
@@ -126,8 +126,10 @@ METHOD ExecuteCommand( cSql ) CLASS PersistenceDao
     LOCAL oError := NIL
     TRY
         ::SqlErrorCode := sqlite3_exec( ::pConnection, cSql )
+        Throw( ErrorNew() ) UNLESS ::SqlErrorCode == SQLITE_OK
         ::ChangedRecords := sqlite3_total_changes( ::pConnection )
     CATCH oError
+        oError:Description := Utilities():New():getErrorDescription( cSql, ::SqlErrorCode )
         ::Error := oError
     ENDTRY
 RETURN NIL
@@ -160,11 +162,14 @@ METHOD FindBy( hRecord, cSql ) CLASS PersistenceDao
     LOCAL oError := NIL, pRecords := NIL
 
     TRY
-        pRecords := sqlite3_prepare( ::pConnection, hb_StrReplace( cSql, hRecord ) )
-        ::RecordSet := ::FeedRecordSet( pRecords )
+        cSql := hb_StrReplace( cSql, hRecord )
+        pRecords := sqlite3_prepare( ::pConnection, cSql )
         ::SqlErrorCode := sqlite3_errcode( ::pConnection )
+        Throw( ErrorNew() ) UNLESS ::SqlErrorCode == SQLITE_OK
+        ::RecordSet := ::FeedRecordSet( pRecords )
         ::ChangedRecords := sqlite3_total_changes( ::pConnection )
     CATCH oError
+        oError:Description := Utilities():New():getErrorDescription( cSql, ::SqlErrorCode )
         ::Error := oError
     FINALLY
         sqlite3_clear_bindings(pRecords)    UNLESS pRecords == NIL
