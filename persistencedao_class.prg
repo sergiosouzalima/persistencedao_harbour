@@ -105,7 +105,7 @@ METHOD Error(oError) CLASS PersistenceDao
 RETURN ::oError
 
 METHOD InitStatusIndicators() CLASS PersistenceDao
-    ::ChangedRecords := 0 ; ::RecordSet := {} ; ::SqlErrorCode := 0 ; ::Error := NIL
+    ::ChangedRecords := 0 ; ::RecordSet := {} ; ::SqlErrorCode := 0 ; ::Error := NIL ; ::Valid := .F.
 RETURN NIL
 
 METHOD Id( cID ) CLASS PersistenceDao
