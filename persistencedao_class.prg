@@ -20,6 +20,7 @@ CREATE CLASS PersistenceDao INHERIT DatasourceDao
         METHOD  closeConnection()
         METHOD  ChangedRecords( nChangedRecords )   SETGET
         METHOD  RecordSet( ahRecordSet )            SETGET
+        METHOD  AuxRecordSet( ahAuxRecordSet )      SETGET
         METHOD  SqlErrorCode( nSqlErrorCode )       SETGET
         METHOD  Error( oError )                     SETGET
         METHOD  Id( cID )                           SETGET
@@ -31,6 +32,7 @@ CREATE CLASS PersistenceDao INHERIT DatasourceDao
         METHOD  NotFound()
         METHOD  RecordSetLength()
         METHOD  FoundMany()
+        METHOD  SimpleSearch( cSql, hParams )
         // ----------------
     PROTECTED:
         DATA    pConnection         AS POINTER  INIT NIL
@@ -41,6 +43,7 @@ CREATE CLASS PersistenceDao INHERIT DatasourceDao
     HIDDEN:
         DATA    nChangedRecords     AS INTEGER  INIT 0
         DATA    ahRecordSet         AS ARRAY    INIT {}
+        DATA    ahAuxRecordSet      AS ARRAY    INIT {}
         DATA    nSqlErrorCode       AS INTEGER  INIT 0
         DATA    oError              AS OBJECT   INIT NIL
         DATA    cID                 AS STRING   INIT ""
@@ -88,6 +91,10 @@ RETURN ::nChangedRecords
 METHOD RecordSet(ahRecordSet) CLASS PersistenceDao
     ::ahRecordSet := ahRecordSet IF hb_IsArray(ahRecordSet)
 RETURN ::ahRecordSet
+
+METHOD AuxRecordSet( ahAuxRecordSet ) CLASS PersistenceDao
+    ::ahAuxRecordSet := ahAuxRecordSet IF hb_IsArray(ahAuxRecordSet)
+RETURN ::ahAuxRecordSet
 
 METHOD SqlErrorCode(nSqlErrorCode) CLASS PersistenceDao
     ::nSqlErrorCode := nSqlErrorCode IF hb_IsNumeric(nSqlErrorCode)
@@ -176,6 +183,26 @@ METHOD FindBy( hRecord, cSql ) CLASS PersistenceDao
         sqlite3_finalize(pRecords)          UNLESS pRecords == NIL
     ENDTRY
 RETURN NIL
+
+METHOD SimpleSearch( cSql, hRecord )
+    LOCAL lFound := .F., oError := NIL
+    LOCAL pRecords := NIL, nSqlErrorCode := 0
+
+    TRY
+        cSql := hb_StrReplace( cSql, hRecord )
+        pRecords := sqlite3_prepare( ::pConnection, cSql )
+        nSqlErrorCode := sqlite3_errcode( ::pConnection )
+        Throw( ErrorNew() ) UNLESS nSqlErrorCode == SQLITE_OK
+        ::AuxRecordSet := ::FeedRecordSet( pRecords )
+        lFound := Len(::AuxRecordSet) > 0
+    CATCH oError
+        oError:Description := Utilities():New():getErrorDescription( cSql, nSqlErrorCode )
+        ::Error := oError
+    FINALLY
+        sqlite3_clear_bindings(pRecords)    UNLESS pRecords == NIL
+        sqlite3_finalize(pRecords)          UNLESS pRecords == NIL
+    ENDTRY
+RETURN lFound
 
 METHOD ONERROR( xParam ) CLASS PersistenceDao
     LOCAL cCol := __GetMessage(), xResult
