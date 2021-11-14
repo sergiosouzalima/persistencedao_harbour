@@ -15,6 +15,7 @@
 hbsqlit3.hbc
 
 ../../hbexpect/lib/hbexpect.prg
+../../error_harbour/error_class.prg
 ../../datasourcedao_harbour/datasourcedao_class.prg
 ../persistencedao_class.prg
 persistencedao_test.prg

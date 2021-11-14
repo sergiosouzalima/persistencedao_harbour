@@ -136,7 +136,8 @@ METHOD ExecuteCommand( cSql ) CLASS PersistenceDao
         Throw( ErrorNew() ) UNLESS ::SqlErrorCode == SQLITE_OK
         ::ChangedRecords := sqlite3_total_changes( ::pConnection )
     CATCH oError
-        oError:Description := Utilities():New():getErrorDescription( cSql, ::SqlErrorCode )
+        //oError:Description := Utilities():New():getErrorDescription( cSql, ::SqlErrorCode )
+        oError:Description := Error():New():getErrorDescription( cSql, ::SqlErrorCode )
         ::Error := oError
     ENDTRY
 RETURN NIL
@@ -176,7 +177,8 @@ METHOD FindBy( hRecord, cSql ) CLASS PersistenceDao
         ::RecordSet := ::FeedRecordSet( pRecords )
         ::ChangedRecords := sqlite3_total_changes( ::pConnection )
     CATCH oError
-        oError:Description := Utilities():New():getErrorDescription( cSql, ::SqlErrorCode )
+        //oError:Description := Utilities():New():getErrorDescription( cSql, ::SqlErrorCode )
+        oError:Description := Error():New():getErrorDescription( cSql, ::SqlErrorCode )
         ::Error := oError
     FINALLY
         sqlite3_clear_bindings(pRecords)    UNLESS pRecords == NIL
@@ -196,7 +198,8 @@ METHOD SimpleSearch( cSql, hRecord )
         ::AuxRecordSet := ::FeedRecordSet( pRecords )
         lFound := Len(::AuxRecordSet) > 0
     CATCH oError
-        oError:Description := Utilities():New():getErrorDescription( cSql, nSqlErrorCode )
+        //oError:Description := Utilities():New():getErrorDescription( cSql, nSqlErrorCode )
+        oError:Description := Error():New():getErrorDescription( cSql, ::SqlErrorCode )
         ::Error := oError
     FINALLY
         sqlite3_clear_bindings(pRecords)    UNLESS pRecords == NIL
@@ -205,6 +208,12 @@ METHOD SimpleSearch( cSql, hRecord )
 RETURN lFound
 
 METHOD ONERROR( xParam ) CLASS PersistenceDao
+    LOCAL xResult := NIL
+    xResult := Error():New():getOnErrorMessage( Self, xParam, __GetMessage() )
+    ? "*** Error => ", xResult
+RETURN xResult
+
+/*METHOD ONERROR( xParam ) CLASS PersistenceDao
     LOCAL cCol := __GetMessage(), xResult
 
     IF Left( cCol, 1 ) == "_" // underscore means it's a variable
@@ -221,4 +230,4 @@ METHOD ONERROR( xParam ) CLASS PersistenceDao
        xResult := "Method not created " + cCol
     ENDIF
     ? "*** Error => ", xResult
-RETURN xResult
+RETURN xResult*/
