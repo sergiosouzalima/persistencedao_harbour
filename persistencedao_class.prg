@@ -33,6 +33,7 @@ CREATE CLASS PersistenceDao INHERIT DatasourceDao
         METHOD  RecordSetLength()
         METHOD  FoundMany()
         METHOD  SimpleSearch( cSql, hParams )
+        METHOD  Search( cSql, hRecord )
         // ----------------
     PROTECTED:
         DATA    pConnection         AS POINTER  INIT NIL
@@ -186,9 +187,15 @@ METHOD FindBy( hRecord, cSql ) CLASS PersistenceDao
     ENDTRY
 RETURN NIL
 
-METHOD SimpleSearch( cSql, hRecord )
+METHOD SimpleSearch( cSql, hRecord ) CLASS PersistenceDao
+    LOCAL hResult := {}
+    hResult := ::Search( cSql, hRecord )
+RETURN hResult["FOUND"]
+
+METHOD Search( cSql, hRecord ) CLASS PersistenceDao
     LOCAL lFound := .F., oError := NIL
     LOCAL pRecords := NIL, nSqlErrorCode := 0
+    LOCAL hResult := { "FOUND" => lFound, "SIZE" => 0, "RECORD_SET" => {} }
 
     TRY
         cSql := hb_StrReplace( cSql, hRecord )
@@ -197,15 +204,17 @@ METHOD SimpleSearch( cSql, hRecord )
         Throw( ErrorNew() ) UNLESS nSqlErrorCode == SQLITE_OK
         ::AuxRecordSet := ::FeedRecordSet( pRecords )
         lFound := Len(::AuxRecordSet) > 0
+        hResult := {    "FOUND" => lFound, ;
+                        "SIZE" => Len(::AuxRecordSet), ;
+                        "RECORD_SET" => ::AuxRecordSet }
     CATCH oError
-        //oError:Description := Utilities():New():getErrorDescription( cSql, nSqlErrorCode )
         oError:Description := Error():New():getErrorDescription( cSql, ::SqlErrorCode )
         ::Error := oError
     FINALLY
         sqlite3_clear_bindings(pRecords)    UNLESS pRecords == NIL
         sqlite3_finalize(pRecords)          UNLESS pRecords == NIL
     ENDTRY
-RETURN lFound
+RETURN hResult
 
 METHOD ONERROR( xParam ) CLASS PersistenceDao
     LOCAL xResult := NIL
