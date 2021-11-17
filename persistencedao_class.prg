@@ -19,8 +19,6 @@ CREATE CLASS PersistenceDao INHERIT DatasourceDao, Params
         METHOD  getConnection()
         METHOD  closeConnection()
         METHOD  ChangedRecords( nChangedRecords )   SETGET
-       // METHOD  RecordSet( ahRecordSet )            SETGET
-        //METHOD  AuxRecordSet( ahAuxRecordSet )      SETGET
         METHOD  SqlErrorCode( nSqlErrorCode )       SETGET
         METHOD  Error( oError )                     SETGET
         METHOD  Id( cID )                           SETGET
@@ -28,22 +26,15 @@ CREATE CLASS PersistenceDao INHERIT DatasourceDao, Params
         METHOD  UpdatedAt( cUpdatedAt )             SETGET
         METHOD  Message( cMessage )                 SETGET
         METHOD  Valid( lValid )                     SETGET
-        /*METHOD  Found()
-        METHOD  NotFound()
-        METHOD  RecordSetLength()
-        METHOD  FoundMany()*/
         METHOD  Search( cSql, hRecord )
-        // ----------------
+
     PROTECTED:
         DATA    pConnection         AS POINTER  INIT NIL
         METHOD  ExecuteCommand( cSql )
-        //METHOD  FindBy( hRecord, cSql )
         METHOD  InitStatusIndicators()
 
     HIDDEN:
         DATA    nChangedRecords     AS INTEGER  INIT 0
-        //DATA    ahRecordSet         AS ARRAY    INIT {}
-        //DATA    ahAuxRecordSet      AS ARRAY    INIT {}
         DATA    nSqlErrorCode       AS INTEGER  INIT 0
         DATA    oError              AS OBJECT   INIT NIL
         DATA    cID                 AS STRING   INIT ""
@@ -72,29 +63,9 @@ RETURN ::Destroy()
 // ----------------
 
 // Status indicators
-/*METHOD RecordSetLength() CLASS PersistenceDao
-RETURN Len(::RecordSet)
-
-METHOD Found() CLASS PersistenceDao
-RETURN ::RecordSetLength() > 0
-
-METHOD FoundMany() CLASS PersistenceDao
-RETURN ::RecordSetLength() > 1
-
-METHOD NotFound() CLASS PersistenceDao
-RETURN !::Found()*/
-
 METHOD ChangedRecords(nChangedRecords) CLASS PersistenceDao
     ::nChangedRecords := nChangedRecords IF hb_IsNumeric(nChangedRecords)
 RETURN ::nChangedRecords
-
-/*METHOD RecordSet(ahRecordSet) CLASS PersistenceDao
-    ::ahRecordSet := ahRecordSet IF hb_IsArray(ahRecordSet)
-RETURN ::ahRecordSet*/
-
-/*METHOD AuxRecordSet( ahAuxRecordSet ) CLASS PersistenceDao
-    ::ahAuxRecordSet := ahAuxRecordSet IF hb_IsArray(ahAuxRecordSet)
-RETURN ::ahAuxRecordSet*/
 
 METHOD SqlErrorCode(nSqlErrorCode) CLASS PersistenceDao
     ::nSqlErrorCode := nSqlErrorCode IF hb_IsNumeric(nSqlErrorCode)
@@ -156,33 +127,15 @@ METHOD FeedRecordSet( pRecords ) CLASS PersistenceDao
             FOR nI := 1 TO nQtdCols
                 nColType := sqlite3_column_type( pRecords, nI )
                 cColName := sqlite3_column_name( pRecords, nI )
-                hRecordSet[cColName] := AllTrim(Str(sqlite3_column_int( pRecords, nI )))    IF nColType == 1 // SQLITE_INTEGER
-                hRecordSet[cColName] := sqlite3_column_text( pRecords, nI )                 IF nColType == 3 // SQLITE_TEXT
-                hRecordSet[cColName] := sqlite3_column_blob( pRecords, nI )                 IF nColType == 4 // SQLITE_BLOB
+                hRecordSet[cColName] := sqlite3_column_int(  pRecords, nI ) IF nColType == 1 // SQLITE_INTEGER
+                hRecordSet[cColName] := sqlite3_column_text( pRecords, nI ) IF nColType == 3 // SQLITE_TEXT
+                hRecordSet[cColName] := sqlite3_column_blob( pRecords, nI ) IF nColType == 4 // SQLITE_BLOB
             NEXT
             AADD( ahRecordSet, hRecordSet )
         ENDIF
     ENDDO
+
 RETURN ahRecordSet
-
-/*METHOD FindBy( hRecord, cSql ) CLASS PersistenceDao
-    LOCAL oError := NIL, pRecords := NIL
-
-    TRY
-        cSql := hb_StrReplace( cSql, hRecord )
-        pRecords := sqlite3_prepare( ::pConnection, cSql )
-        ::SqlErrorCode := sqlite3_errcode( ::pConnection )
-        Throw( ErrorNew() ) UNLESS ::SqlErrorCode == SQLITE_OK
-        ::RecordSet := ::FeedRecordSet( pRecords )
-        ::ChangedRecords := sqlite3_total_changes( ::pConnection )
-    CATCH oError
-        oError:Description := Error():New():getErrorDescription( cSql, ::SqlErrorCode )
-        ::Error := oError
-    FINALLY
-        sqlite3_clear_bindings(pRecords)    UNLESS pRecords == NIL
-        sqlite3_finalize(pRecords)          UNLESS pRecords == NIL
-    ENDTRY
-RETURN NIL*/
 
 METHOD Search( cSql, hParamRecord ) CLASS PersistenceDao
     LOCAL oError := NIL, pRecords := NIL, nSqlErrorCode := 0
