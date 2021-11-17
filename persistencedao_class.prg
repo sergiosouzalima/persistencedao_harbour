@@ -134,7 +134,6 @@ METHOD FeedRecordSet( pRecords ) CLASS PersistenceDao
             AADD( ahRecordSet, hRecordSet )
         ENDIF
     ENDDO
-
 RETURN ahRecordSet
 
 METHOD Search( cSql, hParamRecord ) CLASS PersistenceDao
@@ -153,8 +152,8 @@ METHOD Search( cSql, hParamRecord ) CLASS PersistenceDao
         oError:Description := Error():New():getErrorDescription( cSql, ::SqlErrorCode )
         ::Error := oError
     FINALLY
-        sqlite3_clear_bindings(pRecords)    UNLESS pRecords == NIL
-        sqlite3_finalize(pRecords)          UNLESS pRecords == NIL
+        sqlite3_clear_bindings(pRecords)    IF oError == NIL
+        sqlite3_finalize(pRecords)          IF oError == NIL
     ENDTRY
 RETURN oParams
 
